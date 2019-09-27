@@ -1,24 +1,25 @@
 # pintos
-Project:
-    -   Priority donation is the most difficult
-    -   For alarm clock:
-        -   zero - use timer_sleep which is part of timer.c
-                 - tick - unit of time for the operating system
-        -   negative - 
-                 if(ticks<=0){
-                     return;
-                 }
-        -   single
-        -   multiple
-        -   Priority
-        -   simultaneous
 
-        For the above:
-            call_thread_sleep()
-            current_ticks+ticks
-            t = current_thread();
-            t => wake_up_ticks = ticks
-            read semaphores from sync.h and read about synch_up and synch_down (changes value of flag to 1). each thread has its own semaphore. sema down releases the resources.
+Project:
+-       Priority donation is the most difficult:
+-   For alarm clock:
+    -   zero - use timer_sleep which is part of timer.c
+             - tick - unit of time for the operating system
+    -   negative - 
+             if(ticks<=0){
+                 return;
+             }
+    -   single
+    -   multiple
+    -   Priority
+    -   simultaneous
+
+For the above:
+call_thread_sleep()
+current_ticks+ticks
+t = current_thread();
+t => wake_up_ticks = ticks
+read semaphores from sync.h and read about synch_up and synch_down (changes value of flag to 1). each thread has its own semaphore. sema down releases the resources.
             We then save the thread which gave up its resources in a new list which is ordered by wake up ticks. Let's assume we insert it into list_insert_ordered
             list_insert_ordered defined in list.c has an ordered function which can be used to arrange the threads based on the wake_up_ticks, so that the next thread to be woken up is always at the head of the list
 
