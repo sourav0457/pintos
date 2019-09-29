@@ -14,7 +14,7 @@ This will handle the first two test cases.
 create a thread -> thread_create. Point this to the current thread. (current_thread())
 
 t => current_thread();
-if wake_up_ticks == ticks: i.e. if the current system time is equal to the wake up time, then we need to wake up a thread.
+if wake_up_ticks <= ticks: i.e. if the current system time is equal to the wake up time, then we need to wake up a thread.
     // But before that:
     // Release the resources held by the current thread. call synchronisation primitives, so that the current threads will release all the resources. Call Semadown (sync.primitive.sema_down())
     // insert t to sleep_insert_ordered(). Sleep_insert_ordered is just an instance of list_insert_ordered() defined in list.c
