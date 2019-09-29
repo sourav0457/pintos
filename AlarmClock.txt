@@ -1,0 +1,39 @@
+7 test cases:
+    alarm negative
+    alarm zero
+    alarm simultaneous
+    alarm single
+    alarm multiple
+    alarm priority (Work on this after working on priority scheduling)
+
+in timer.c -> timer_sleep():
+    if ticks <= 0:
+        return
+This will handle the first two test cases.
+
+create a thread -> thread_create. Point this to the current thread. (current_thread())
+
+t => current_thread();
+if wake_up_ticks == ticks: i.e. if the current system time is equal to the wake up time, then we need to wake up a thread.
+    // But before that:
+    // Release the resources held by the current thread. call synchronisation primitives, so that the current threads will release all the resources. Call Semadown (sync.primitive.sema_down())
+    // insert t to sleep_insert_ordered(). Sleep_insert_ordered is just an instance of list_insert_ordered() defined in list.c
+    This list will take 4 variables - pointer to the current and new thread, function based on which the threads will be ordered, auxiliary variable (not required for this project)
+    After the thread is asleep, the memory and resources are free. Now we need to provide memory to the thread that we were supposed to wake up.
+    To do this, we will call the sema_up on the thread that needs to be woken up
+    //sync.primitive.sema_up
+    thread_block() -> to prevent other threads from waking up
+
+    // Define sleep_list_ordered() and wake_up_ticks() in thread.h, and in thread.int you do all the preprocessing for the semaphores.
+    //Now look for a function that is called at every tick. This is the timer_interrupt function. This is where we wake up the thread.
+        Here, first get the current time. i.e. 
+        var some_variable = current_ticks()
+        if wake_up_ticks <= some_variable [then it means that we need to pop the first element from the head of the sleep_insert_ordered list] (<= is important as tick can also be sometimes in decimal 0.5 or something)
+            // wake up the thread
+        
+In order to pass the alarm priority, instead of ordering sleep_insert_ordered based on wake_up_ticks, order it based on priority. (Do it at the end of the other alarm clock implementations)
+
+NOTE:   synch.h and synch.c contains the semaphores 
+
+
+
