@@ -1,0 +1,53 @@
+Test cases:
+    alarm priority (from alarm clock implementation)
+    priority sema
+    priority condour
+    priority fifo
+    priority change
+    priority preempt
+    priority donation
+
+Work with the thread.c file
+
+First do priority scheduling.
+First step is to create the thread using the thread.create function. Compare priorities of the thread that you newly created and the thread that is currently running.
+Two important functions: thread.get_priority and thread_set_priority
+
+if (the head of the ordered list does not contain an idle thread -> thread_id of 2): -> [Verify once with TA]
+    if t.priority > thread.get_priority(current_running_thread) -> Note even if the priority of the current thread is equal to the newly created thread, do nothing, because we need to maintain priority FIFO
+
+    [Not sure where this is supposed to be done] ->  replace the thread in the sleep_ordered_list to its correct position
+    In order to implement set priority correctly, check for 2 conditions:
+    if the (thread is running) and the (priority of the current thread is less than the priority in read list) {yield()}
+
+Till here, the above implementation will allow you to pass the following test cases:
+    alarm priority (from alarm clock implementation)
+    priority fifo
+    priority change
+    priority preempt
+
+t1,t2,t3,t4,t5
+    -   Insert into the ready list
+    -   While we wake up check thread with max_priority
+
+This will cover the priority sema and priority condour test cases.
+
+PRIORITY DONATION (TO BE COVERED AT THE END):
+K>L>M - The priorities will go in a chain fashion i.e. priority will go from K to L and then from L to M. At this point, all K,L and M will have the same priority.
+Inside thread.c:
+    Save the initial priority of M, so that it can revert back once it has finished.
+    Pointers that will look for the locks
+    Lock will only work when the thread holding the lock has the max priority value.
+
+Lock acquired:
+1 - If there is a lock which has no holder, 
+        -   make the current thread hold the lock
+        -   set the priority of the current thread to be equal to max priority (as the lock will only work when the thread with the max priority is holding the lock)
+2 - If (the lock is currently being held by a thread) AND (priority of the request thread > priority of the current thread), then DONATE
+        -   save the priority of the current thread (init_priority)
+        -   priority of the req thread => priority of the current thread
+        -   check if priority of the current thread  is equal to the max priority (BUT WOULDN'T THEY ALWAYS BE EQUAL??) -> Condition: If A,B,D and E are waiting in the queue and C
+            is currently running. If A has the highest priority but requires a lock that is being held by D
+
+
+
