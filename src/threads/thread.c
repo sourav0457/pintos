@@ -28,6 +28,9 @@ static struct list ready_list;
 // Creating a pointer to a list which arranges threads based on their wake_up_time
 static struct list *ordered_sleep_list;
 
+static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *,
+                        void *);
+
 struct thread *thread_to_sleep;
 
 /* List of all processes.  Processes are added to this list
@@ -107,7 +110,7 @@ thread_init (void)
 
   //my_code
   // Initializing the semaphore value for the current running thread to 0 
-  sema_init(&initial_thread -> thread_sema_value, 0);
+  sema_init(&initial_thread -> thread_sema_value, 1);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -285,6 +288,16 @@ thread_tid (void)
   return thread_current ()->tid;
 }
 
+static bool
+ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
+            void *aux) 
+{
+  struct thread *a = list_entry (a_, struct thread, elem);
+  struct thread *b = list_entry (b_, struct thread, elem);
+  
+  return a->wake_up_ticks < b->wake_up_ticks;
+}
+
 // my_code
 // Creating a function to put a thread to sleep
 void thread_sleep(int64_t ticks) {
@@ -298,11 +311,11 @@ void thread_sleep(int64_t ticks) {
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
 
+  // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
+  list_insert_ordered(ordered_sleep_list, &current_thread->elem, ordered_tick_asc, NULL);
+
   // Using sema-down to block the running thread
   sema_down(&current_thread -> thread_sema_value);
-
-  // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
-  list_insert_ordered(ordered_sleep_list, );
 }
 
 /* Deschedules the current thread and destroys it.  Never
