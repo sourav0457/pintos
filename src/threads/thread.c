@@ -24,6 +24,12 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+// my_code
+// Creating a pointer to a list which arranges threads based on their wake_up_time
+static struct list *ordered_sleep_list;
+
+struct thread *thread_to_sleep;
+
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -98,6 +104,10 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+
+  //my_code
+  // Initializing the semaphore value for the current running thread to 0 
+  sema_init(&initial_thread -> thread_sema_value, 0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -273,6 +283,26 @@ tid_t
 thread_tid (void) 
 {
   return thread_current ()->tid;
+}
+
+// my_code
+// Creating a function to put a thread to sleep
+void thread_sleep(int64_t ticks) {
+
+  // Initialising the list of sleeping threads
+  list_init(ordered_sleep_list);
+
+  // Creating a pointer to point to the current thread
+  struct thread *current_thread = thread_current();
+
+  // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
+  current_thread -> wake_up_ticks = timer_ticks() + ticks;
+
+  // Using sema-down to block the running thread
+  sema_down(&current_thread -> thread_sema_value);
+
+  // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
+  list_insert_ordered(ordered_sleep_list, );
 }
 
 /* Deschedules the current thread and destroys it.  Never
