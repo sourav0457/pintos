@@ -314,15 +314,17 @@ void thread_sleep(struct thread * t) {
   list_insert_ordered(ordered_sleep_list, &t->elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
-  sema_down(t -> thread_sema_value);
+//  sema_down(t -> thread_sema_value);
+    thread_block();
 }
 void thread_wake_up(){
     struct list_elem *front = list_front (ordered_sleep_list);
     struct thread * t = list_entry(front, struct thread, elem);
     if(t->wake_up_ticks <= timer_ticks()) {
         list_remove(front);
-        sema_up(t->thread_sema_value);
-        thread_block();
+//        sema_up(t->thread_sema_value);
+//        thread_block();
+          thread_unblock(t);
     }
 }
 
