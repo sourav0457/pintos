@@ -96,7 +96,9 @@ timer_sleep (int64_t ticks)
       return;
   }
   list_init(&list);
-  list_insert_ordered(&list_sleep, start+ticks,value_less, NULL);
+  alarm_thread = running_thread();
+  alarm_thread->wake_up_tick = start+ticks;
+  list_insert_ordered(&list_sleep, alarm_thread,value_less, NULL);
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks) 
     thread_yield ();

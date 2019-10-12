@@ -135,6 +135,15 @@ value_less (const struct list_elem *a_, const struct list_elem *b_,
   return a->value < b->value;
 }
 
+value_less_wake_up_tick (const struct list_elem *a_, const struct list_elem *b_,
+            void *aux UNUSED)
+{
+    const struct thread *a = list_entry (a_, struct thread, elem);
+    const struct thread *b = list_entry (b_, struct thread, elem);
+
+    return a->wake_up_tick < b->wake_up_tick;
+}
+
 /* Verifies that LIST contains the values 0...SIZE when traversed
    in forward order. */
 static void
