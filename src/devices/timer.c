@@ -94,7 +94,7 @@ timer_sleep (int64_t ticks)
     return;
 
   int64_t start = timer_ticks ();
-  struct thread *a = running_thread();
+  struct thread * a = running_thread ();
   a->wake_up_ticks = start + ticks;
   thread_sleep(a);
   ASSERT (intr_get_level () == INTR_ON);
