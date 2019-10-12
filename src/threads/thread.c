@@ -304,7 +304,7 @@ void thread_sleep(struct thread * t) {
 
   // Initialising the list of sleeping threads
   list_init(ordered_sleep_list);
-
+  ASSERT (intr_get_level () == INTR_ON);
   // Creating a pointer to point to the current thread
 //  struct thread *current_thread = thread_current();
 
