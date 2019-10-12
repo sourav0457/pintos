@@ -90,8 +90,10 @@ void
 timer_sleep (int64_t ticks) 
 {
   // Checking if the tick value is equal to zero or negative
-  if(ticks <= 0)
-    return;
+  if(ticks <= 0){
+      printf("value is less than zero so returning ");
+      return;
+  }
 
   int64_t start = timer_ticks ();
   struct thread * a = thread_current ();
