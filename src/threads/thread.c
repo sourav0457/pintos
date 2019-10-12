@@ -108,9 +108,6 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 
-  //my_code
-  // Initializing the semaphore value for the current running thread to 0 
-  sema_init(&initial_thread -> thread_sema_value, 1);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -318,6 +315,15 @@ void thread_sleep(int64_t ticks) {
   sema_down(&current_thread -> thread_sema_value);
 }
 
+void thread_wakeup() {
+  struct list_elem *front = list_front (ordered_sleep_list);
+  struct thread * t = list_entry(front, struct thread, elem);
+  if(t->wake_up_ticks <= timer_ticks()) {
+    sema_up(&t->thread_sema_value);
+    list_pop_front(ordered_sleep_list);
+  }
+}
+
 /* Deschedules the current thread and destroys it.  Never
    returns to the caller. */
 void
@@ -503,6 +509,10 @@ init_thread (struct thread *t, const char *name, int priority)
   memset (t, 0, sizeof *t);
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
+
+  // my_code
+  // Initializing the value of semaphore to 0
+  sema_init(&t -> thread_sema_value, 0);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
