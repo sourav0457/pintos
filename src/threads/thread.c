@@ -26,7 +26,7 @@ static struct list ready_list;
 
 // my_code
 // Creating a pointer to a list which arranges threads based on their wake_up_time
-static struct list *ordered_sleep_list;
+static struct list ordered_sleep_list;
 
 static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *,
                         void *);
@@ -101,6 +101,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init(&ordered_sleep_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -300,7 +301,7 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
 void thread_sleep(int64_t ticks) {
 
   // Initialising the list of sleeping threads
-  list_init(ordered_sleep_list);
+  // list_init(ordered_sleep_list);
 
   // Creating a pointer to point to the current thread
   struct thread *current_thread = thread_current();
@@ -309,19 +310,19 @@ void thread_sleep(int64_t ticks) {
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
-  list_insert_ordered(ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
+  list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
   sema_down(&current_thread -> thread_sema_value);
 }
 
 void thread_wakeup() {
-  while(!list_empty(ordered_sleep_list)){
-    struct list_elem *front = list_front (ordered_sleep_list);
+  if(!list_empty(&ordered_sleep_list)){
+    struct list_elem *front = list_front (&ordered_sleep_list);
     struct thread * t = list_entry(front, struct thread, thread_elem);
     if(t->wake_up_ticks <= timer_ticks()) {
       sema_up(&t->thread_sema_value);
-      list_pop_front(ordered_sleep_list);
+      list_pop_front(&ordered_sleep_list);
     }
   }
 }
