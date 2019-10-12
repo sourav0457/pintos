@@ -312,7 +312,7 @@ void thread_sleep(struct thread * t) {
 //  current_thread -> wake_up_ticks = timer_ticks() + ticks;
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
-  list_insert_ordered(ordered_sleep_list, &current_thread->elem, ordered_tick_asc, NULL);
+  list_insert_ordered(ordered_sleep_list, &t->elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
   sema_down(t -> thread_sema_value);
