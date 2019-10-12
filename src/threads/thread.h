@@ -1,6 +1,7 @@
 #ifndef THREADS_THREAD_H
 #define THREADS_THREAD_H
 
+#include "threads/synch.h"
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
@@ -90,7 +91,8 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
     struct semaphore thread_sema_value; /* The semphore value of the thread */
-    int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */ 
+    int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
+    struct list_elem thread_elem;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
