@@ -110,7 +110,7 @@ thread_init (void)
 
   //my_code
   // Initializing the semaphore value for the current running thread to 0 
-  sema_init(&initial_thread -> thread_sema_value, 0);
+//  sema_init(&initial_thread -> thread_sema_value, 0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -304,7 +304,6 @@ void thread_sleep(struct thread * t) {
 
   // Initialising the list of sleeping threads
   list_init(ordered_sleep_list);
-  ASSERT (intr_get_level () == INTR_ON);
   // Creating a pointer to point to the current thread
 //  struct thread *current_thread = thread_current();
 
