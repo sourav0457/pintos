@@ -94,7 +94,9 @@ timer_sleep (int64_t ticks)
     return;
 
   int64_t start = timer_ticks ();
-
+  struct thread *a = running_thread();
+  a->wake_up_ticks = start + ticks;
+  thread_sleep(a);
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
@@ -174,6 +176,12 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  struct list_elem *front = list_front (ordered_sleep_list);
+  struct thread * t = list_entry(front, struct thread, elem);
+  if(t->wake_up_tick <= timer_ticks()) {
+      list_remove(front);
+      thread_wake_up(t);
+  }
   ticks++;
   thread_tick ();
 }

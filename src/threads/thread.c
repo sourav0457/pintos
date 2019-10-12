@@ -110,7 +110,7 @@ thread_init (void)
 
   //my_code
   // Initializing the semaphore value for the current running thread to 0 
-  sema_init(&initial_thread -> thread_sema_value, 1);
+  sema_init(&initial_thread -> thread_sema_value, 0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -300,22 +300,26 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
 
 // my_code
 // Creating a function to put a thread to sleep
-void thread_sleep(int64_t ticks) {
+void thread_sleep(struct thread * t) {
 
   // Initialising the list of sleeping threads
   list_init(ordered_sleep_list);
 
   // Creating a pointer to point to the current thread
-  struct thread *current_thread = thread_current();
+//  struct thread *current_thread = thread_current();
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
-  current_thread -> wake_up_ticks = timer_ticks() + ticks;
+//  current_thread -> wake_up_ticks = timer_ticks() + ticks;
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
   list_insert_ordered(ordered_sleep_list, &current_thread->elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
-  sema_down(&current_thread -> thread_sema_value);
+  sema_down(t -> thread_sema_value);
+}
+void thread_wake_up(struct thread *t){
+    sema_up(t->thread_sema_value);
+    thread_block();
 }
 
 /* Deschedules the current thread and destroys it.  Never
