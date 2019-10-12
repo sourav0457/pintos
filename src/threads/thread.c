@@ -289,8 +289,8 @@ static bool
 ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
             void *aux) 
 {
-  struct thread *a = list_entry (a_, struct thread, thread_elem);
-  struct thread *b = list_entry (b_, struct thread, thread_elem);
+  struct thread *a = list_entry (a_, struct thread, elem);
+  struct thread *b = list_entry (b_, struct thread, elem);
   
   return a->wake_up_ticks < b->wake_up_ticks;
 }
@@ -309,7 +309,7 @@ void thread_sleep(int64_t ticks) {
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
-  list_insert_ordered(ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
+  list_insert_ordered(ordered_sleep_list, &current_thread->elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
   sema_down(&current_thread -> thread_sema_value);
@@ -317,7 +317,7 @@ void thread_sleep(int64_t ticks) {
 
 void thread_wakeup() {
   struct list_elem *front = list_front (ordered_sleep_list);
-  struct thread * t = list_entry(front, struct thread, thread_elem);
+  struct thread * t = list_entry(front, struct thread, elem);
   if(t->wake_up_ticks <= timer_ticks()) {
     sema_up(&t->thread_sema_value);
     list_pop_front(ordered_sleep_list);
