@@ -320,7 +320,7 @@ void thread_sleep(struct thread * t) {
 void thread_wake_up(){
     struct list_elem *front = list_front (ordered_sleep_list);
     struct thread * t = list_entry(front, struct thread, elem);
-    if(t->wake_up_tick <= timer_ticks()) {
+    if(t->wake_up_ticks <= timer_ticks()) {
         list_remove(front);
         sema_up(t->thread_sema_value);
         thread_block();
