@@ -214,6 +214,7 @@ thread_create (const char *name, int priority,
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
   if(current_thread->priority < t->priority){
+      printf(" Hi I am here in this thred with priority %d",t->priority);
       thread_yield_priority (current_thread);
   }
     return tid;
@@ -253,9 +254,9 @@ thread_unblock (struct thread *t) {
     ASSERT(t->status == THREAD_BLOCKED);
 
     // Doing changes for priority
-    if (t != ideal_thread) {
+//    if (t != ideal_thread) {
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
-    }
+//    }
 //  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
