@@ -255,14 +255,15 @@ thread_unblock (struct thread *t) {
 
     // Doing changes for priority
 //    if (t != ideal_thread) {
+    printf(" thread being pushed is %d   ", t->priority);
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
-    struct list_elem * e;
-    for (e = list_begin (&ready_list); e != list_end (&ready_list);
-         e = list_next (e))
-    {
-        struct thread *v = list_entry (e, struct thread, elem);
-        printf(" list priority of rady list is %d", v->priority);
-    }
+//    struct list_elem * e;
+//    for (e = list_begin (&ready_list); e != list_end (&ready_list);
+//         e = list_next (e))
+//    {
+//        struct thread *v = list_entry (e, struct thread, elem);
+//        printf(" list priority of rady list is %d", v->priority);
+//    }
 //    }
 //  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
