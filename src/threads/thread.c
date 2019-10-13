@@ -212,9 +212,9 @@ thread_create (const char *name, int priority,
 
     /* Add to run queue. */
     thread_unblock (t);
-    struct thread *current_thread = thread_current();
+    struct thread *current_thread = thread_current ();
   if(current_thread->priority < t->priority){
-      thread_yield();
+      thread_yield_priority ();
   }
     return tid;
 }
@@ -377,12 +377,30 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread)
-      list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
-//    list_push_back (&ready_list, &cur->elem);
+  if (cur != idle_thread) {
+      list_push_back(&ready_list, &cur->elem);
+  }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
+}
+
+void
+thread_yield_priority (void)
+{
+    struct thread *cur = thread_current ();
+    enum intr_level old_level;
+
+    ASSERT (!intr_context ());
+
+    old_level = intr_disable ();
+    if (cur != idle_thread) {
+        list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
+    }
+//    list_push_back (&ready_list, &cur->elem);
+    cur->status = THREAD_READY;
+    schedule ();
+    intr_set_level (old_level);
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
