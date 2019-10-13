@@ -214,7 +214,7 @@ thread_create (const char *name, int priority,
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
   if(current_thread->priority < t->priority){
-      thread_yield_priority ();
+      thread_yield_priority (current_thread);
   }
     return tid;
 }
@@ -386,9 +386,9 @@ thread_yield (void)
 }
 
 void
-thread_yield_priority (void)
+thread_yield_priority (struct thread * cur)
 {
-    struct thread *cur = thread_current ();
+//    struct thread *cur = thread_current ();
     enum intr_level old_level;
 
     ASSERT (!intr_context ());
@@ -651,7 +651,7 @@ schedule (void)
 
   ASSERT (intr_get_level () == INTR_OFF);
   ASSERT (cur->status != THREAD_RUNNING);
-//  ASSERT (is_thread (next));
+  ASSERT (is_thread (next));
 
   if (cur != next)
     prev = switch_threads (cur, next);
