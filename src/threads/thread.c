@@ -211,6 +211,7 @@ thread_create (const char *name, int priority,
     sf->ebp = 0;
 
     /* Add to run queue. */
+//    printf(" caling thread_unblock for thread priority %d", t->priority);
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
   if(current_thread->priority < t->priority){
@@ -433,7 +434,20 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+
   thread_current ()->priority = new_priority;
+  struct list_elem *front = list_front (&ready_list);
+  struct thread * t = list_entry(front, struct thread, thread_elem);
+  struct thread *current_thread = thread_current ();
+    if(thread_current ()->status == THREAD_READY){
+      list_remove (&thread_current ()->elem);
+      list_insert_ordered(&ready_list, &thread_current ()->elem, ordered_priority_dsc, NULL);
+  }
+  else if(thread_current ()->status == THREAD_RUNNING){
+      if(new_priority< t->priority){
+          thread_yield_priority(current_thread);
+      }
+  }
 }
 
 /* Returns the current thread's priority. */
