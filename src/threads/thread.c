@@ -30,6 +30,8 @@ static struct list ordered_sleep_list;
 
 static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *,
                         void *);
+static bool ordered_priority_dsc (const struct list_elem *, const struct list_elem *,
+                              void *);
 
 struct thread *thread_to_sleep;
 
@@ -210,9 +212,13 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
-  thread_unblock (t);
-
-  return tid;
+    list_insert_ordered(&ready_list, &t->thread_elem, ordered_priority_dsc, NULL);
+    thread_unblock (t);
+    struct thread *current_thread = thread_current();
+  if(current_thread->priority < t->priority){
+      thread_yield();
+  }
+    return tid;
 }
 
 /* Puts the current thread to sleep.  It will not be scheduled
@@ -294,6 +300,15 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
   struct thread *b = list_entry (b_, struct thread, thread_elem);
   
   return a->wake_up_ticks < b->wake_up_ticks;
+}
+
+ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
+                  void *aux)
+{
+    struct thread *a = list_entry (a_, struct thread, thread_elem);
+    struct thread *b = list_entry (b_, struct thread, thread_elem);
+
+    return a->priority > b->priority;
 }
 
 // my_code
