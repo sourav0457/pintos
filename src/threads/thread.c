@@ -302,6 +302,7 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
   return a->wake_up_ticks < b->wake_up_ticks;
 }
 
+static bool
 ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
                   void *aux)
 {
