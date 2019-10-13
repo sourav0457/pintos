@@ -253,9 +253,9 @@ thread_unblock (struct thread *t) {
     ASSERT(t->status == THREAD_BLOCKED);
 
     // Doing changes for priority
-    if (t->tid != 2) {
+ //   if (t->tid != 2) {
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
-    }
+  //  }
 //  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
