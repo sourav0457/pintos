@@ -255,7 +255,7 @@ thread_unblock (struct thread *t) {
 
     // Doing changes for priority
 //    if (t != ideal_thread) {
-//    printf(" thread being pushed is %d   ", t->priority);
+    printf(" thread being pushed is %d   ", t->priority);
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
 //    struct list_elem * e;
 //    for (e = list_begin (&ready_list); e != list_end (&ready_list);
