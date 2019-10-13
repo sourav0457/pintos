@@ -214,7 +214,7 @@ thread_create (const char *name, int priority,
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
   if(current_thread->priority < t->priority){
-      printf(" Hi I am here in this thred with priority %d",t->priority);
+      printf(" Hi I am here in this thred with priority %d and current thread priority %d      ",t->priority, current_thread->priortiy);
       thread_yield_priority (current_thread);
   }
     return tid;
