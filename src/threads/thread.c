@@ -440,7 +440,7 @@ thread_set_priority (int new_priority)
   struct thread * t = list_entry(front, struct thread, elem);
   struct thread *current_thread = thread_current ();
     if(thread_current ()->status == THREAD_READY){
-      printf(" removing the thread with ready state to lower priority")
+      printf(" removing the thread with ready state to lower priority");
       list_remove (&thread_current ()->elem);
       list_insert_ordered(&ready_list, &thread_current ()->elem, ordered_priority_dsc, NULL);
   }
