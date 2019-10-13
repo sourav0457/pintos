@@ -447,7 +447,7 @@ thread_set_priority (int new_priority)
   else if(thread_current ()->status == THREAD_RUNNING){
 //      if(new_priority< t->priority){
         if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority)
-          printf(" current thread priority reduced to %d and queue head priority is %d ", new_priority, t->priority );
+          printf(" current thread priority reduced to %d and queue head priority  ", new_priority );
           thread_yield_priority(current_thread);
       }
   }
