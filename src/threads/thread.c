@@ -406,6 +406,7 @@ thread_yield (void)
   if (cur != idle_thread) {
 //      list_push_back(&ready_list, &cur->elem);
 // changing for priority preempt as it has to come in an ordered way
+    printf("thread is being inserted in an ordered way");
       list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
 
   }
