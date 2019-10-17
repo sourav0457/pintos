@@ -224,7 +224,7 @@ thread_create (const char *name, int priority,
 }
 
 thread_check_list(){
-    enum intr_level old_level = intr_disable();
+//    enum intr_level old_level = intr_disable();
     struct thread *current_thread = thread_current ();
     if(!list_empty(&ready_list)){
         printf(" ready queue is not empty");
@@ -234,7 +234,7 @@ thread_check_list(){
             thread_yield();
         }
     }
-    intr_set_level (old_level);
+//    intr_set_level (old_level);
 }
 
 /* Puts the current thread to sleep.  It will not be scheduled
