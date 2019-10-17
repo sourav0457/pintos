@@ -402,6 +402,7 @@ thread_yield (void)
   enum intr_level old_level;
   
   ASSERT (!intr_context ());
+    printf("   thread is being inserted in an ordered way but not entering inside  ");
 
   old_level = intr_disable ();
   printf("   thread is being inserted in an ordered way but not entering inside  ");
