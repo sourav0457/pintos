@@ -389,35 +389,9 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if(!list_empty(&ready_list)){
-    struct list_elem *e;
-
-    for (e = list_begin (&ready_list); e != list_end (&ready_list);
-          e = list_next (e))
-    {
-      struct thread *p = list_entry (e, struct thread, elem);
-      printf("Current thread id: %d, Current thread priority: %d", p -> tid, p -> priority);
-    }
-  }
-  else{
-    printf("LIST IS CURRENTLY EMPTY");
-  }
   if (cur != idle_thread) {
     list_insert_ordered(&ready_list, &cur->elem, priority_desc, NULL);
     // list_push_back (&ready_list, &cur->elem);
-  }
-  if(!list_empty(&ready_list)){
-    struct list_elem *e;
-
-    for (e = list_begin (&ready_list); e != list_end (&ready_list);
-          e = list_next (e))
-    {
-      struct thread *p = list_entry (e, struct thread, elem);
-      printf("Current thread id: %d, Current thread priority: %d", p -> tid, p -> priority);
-    }
-  }
-  else{
-    printf("LIST IS CURRENTLY EMPTY");
   }
   cur->status = THREAD_READY;
   schedule ();
