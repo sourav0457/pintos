@@ -214,11 +214,23 @@ thread_create (const char *name, int priority,
 //    printf(" caling thread_unblock for thread priority %d", t->priority);
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
-  if(current_thread->priority < t->priority){
+//  if(current_thread->priority < t->priority){
 //      printf(" Hi I am here in this thred with priority %d and current thread priority %d      ",t->priority, current_thread->priority);
-      thread_yield();
-  }
+//      thread_yield();
+//  }
+    thread_check_list();
     return tid;
+}
+
+thread_check_list(){
+    enum intr_level old_level;
+    struct thread *current_thread = thread_current ();
+    if(!list_empty(&ready_list)){
+        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>current_thread->priority){
+            thread_yield();
+        }
+    }
+    intr_set_level (old_level);
 }
 
 /* Puts the current thread to sleep.  It will not be scheduled
@@ -449,10 +461,11 @@ thread_set_priority (int new_priority)
   }
   else if(thread_current ()->status == THREAD_RUNNING){
 //      if(new_priority< t->priority){
-        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority){
+//        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority){
 //printf(" current thread priority reduced to %d and queue head priority  ", new_priority );
 //          thread_yield_priority(current_thread);
-            thread_yield();
+//            thread_yield();
+    thread_check_list();
       }
   }
 }
