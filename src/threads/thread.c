@@ -317,13 +317,15 @@ void thread_sleep(int64_t ticks) {
 }
 
 void thread_wakeup() {
-  if(!list_empty(&ordered_sleep_list)){
+  while(!list_empty(&ordered_sleep_list)){
     struct list_elem *front = list_front (&ordered_sleep_list);
     struct thread * t = list_entry(front, struct thread, thread_elem);
     if(t->wake_up_ticks <= timer_ticks()) {
       sema_up(&t->thread_sema_value);
       list_pop_front(&ordered_sleep_list);
     }
+    else
+      break; 
   }
 }
 
