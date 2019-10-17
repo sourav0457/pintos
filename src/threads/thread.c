@@ -311,7 +311,7 @@ void thread_sleep(int64_t ticks) {
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
-  printf("Current thread pid: %d, wake up ticks: %d, priority: %d", current_thread -> tid, current_thread -> wake_up_ticks, current_thread -> priority);
+  printf("Current thread pid: %d, wake up ticks: %d, current ticks: %d, priority: %d", current_thread -> tid, current_thread -> wake_up_ticks, timer_ticks(), current_thread -> priority);
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
   list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
