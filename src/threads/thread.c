@@ -224,7 +224,7 @@ thread_create (const char *name, int priority,
 }
 
 thread_check_list(){
-    enum intr_level old_level;
+    enum intr_level old_level = intr_disable();
     struct thread *current_thread = thread_current ();
     if(!list_empty(&ready_list)){
         printf(" ready queue is not empty");
@@ -402,14 +402,14 @@ thread_yield (void)
   enum intr_level old_level;
   
   ASSERT (!intr_context ());
-//    printf("   thread is being inserted in an ordered way but not entering inside  ");
+    printf("   thread is being inserted in an ordered way but not entering inside  ");
 
   old_level = intr_disable ();
-//  printf("   thread is being inserted in an ordered way but not entering inside  ");
+  printf("   thread is being inserted in an ordered way but not entering inside  ");
   if (cur != idle_thread) {
 //      list_push_back(&ready_list, &cur->elem);
 // changing for priority preempt as it has to come in an ordered way
-//      printf(" thread is being inserted in an ordered way ");
+      printf(" thread is being inserted in an ordered way ");
       list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
 
   }
