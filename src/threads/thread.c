@@ -224,7 +224,7 @@ thread_create (const char *name, int priority,
 }
 
 thread_check_list(){
-    enum intr_level old_level;
+    enum intr_level old_level = intr_disable();
     struct thread *current_thread = thread_current ();
     if(!list_empty(&ready_list)){
         printf(" ready queue is not empty");
