@@ -229,9 +229,14 @@ thread_check_list(){
     if(!list_empty(&ready_list)){
         printf(" ready queue is not empty");
         if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>current_thread->priority){
-            printf( " list priority is %d and current priority is %d and the current thread is being yield",
-                    list_entry (list_begin(&ready_list),struct thread,elem)->priority,current_thread->priority);
+            if (intr_context()) {
+                intr_yield_on_return();
+            } else {
+            printf(" list priority is %d and current priority is %d and the current thread is being yield",
+                   list_entry(list_begin(&ready_list),
+            struct thread,elem)->priority, current_thread->priority);
             thread_yield();
+        }
         }
     }
     intr_set_level (old_level);
