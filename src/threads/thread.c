@@ -29,6 +29,7 @@ static struct list ready_list;
 static struct list ordered_sleep_list;
 
 static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *);
+static bool priority_desc (const struct list_elem *, const struct list_elem *);
 
 struct thread *thread_to_sleep;
 
@@ -107,6 +108,9 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+
+  // Re-ordering ready
+  // list_insert_ordered(&ready_list, )
 
 }
 
@@ -247,7 +251,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  // list_push_back (&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t -> elem, priority_desc, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -283,6 +288,15 @@ tid_t
 thread_tid (void) 
 {
   return thread_current ()->tid;
+}
+
+static bool
+priority_desc (const struct list_elem *thread_a_elem, const struct list_elem *thread_b_elem) 
+{
+  struct thread *thread_a = list_entry (thread_a_elem, struct thread, thread_elem);
+  struct thread *thread_b = list_entry (thread_b_elem, struct thread, thread_elem);
+  
+  return thread_a -> priority > thread_b -> priority;
 }
 
 static bool
@@ -365,8 +379,10 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+  if (cur != idle_thread) {
+    list_insert_ordered(&ready_list, &cur->elem, priority_desc, NULL);
+    // list_push_back (&ready_list, &cur->elem);
+  }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -393,7 +409,15 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  struct thread *current_thread = thread_current();
+  current_thread->priority = new_priority;
+  struct list_elem *front = list_front(&ready_list);
+  struct thread * t = list_entry(front, struct thread, thread_elem);
+  if(t -> tid!=2 && t -> priority > current_thread -> priority){
+    list_insert_ordered(&ready_list, &current_thread->elem, priority_desc, NULL);
+    thread_yield();
+  }
+
 }
 
 /* Returns the current thread's priority. */

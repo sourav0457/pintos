@@ -93,6 +93,7 @@ struct thread
     struct semaphore thread_sema_value; /* The semphore value of the thread */
     int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
     struct list_elem thread_elem;
+    struct list_elem thread_priority_elem; /* Used for arranging list based on priority
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
