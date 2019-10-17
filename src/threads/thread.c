@@ -211,7 +211,8 @@ thread_create (const char *name, int priority,
     sf->ebp = 0;
 
     /* Add to run queue. */
-//    printf(" caling thread_unblock for thread priority %d", t->priority);
+    printf(" caling thread_unblock for thread priority %d", t->priority);
+    printf(" current thread priority %d", thread_current ()->priority);
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
 //  if(current_thread->priority < t->priority){
@@ -226,7 +227,10 @@ thread_check_list(){
     enum intr_level old_level;
     struct thread *current_thread = thread_current ();
     if(!list_empty(&ready_list)){
+        printf(" ready queue is not empty");
         if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>current_thread->priority){
+            printf( " list priority is %d and current priority is %d and the current thread is being yield",
+                    list_entry (list_begin(&ready_list),struct thread,elem)->priority,current_thread->priority);
             thread_yield();
         }
     }
@@ -268,7 +272,7 @@ thread_unblock (struct thread *t) {
 
     // Doing changes for priority
 //    if (t != ideal_thread) {
-//    printf(" thread being pushed is %d   ", t->priority);
+    printf(" thread being pushed is %d   ", t->priority);
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
 //    struct list_elem * e;
 //    for (e = list_begin (&ready_list); e != list_end (&ready_list);
@@ -467,7 +471,7 @@ thread_set_priority (int new_priority)
 //            thread_yield();
     thread_check_list();
       }
-  
+
 }
 
 /* Returns the current thread's priority. */
