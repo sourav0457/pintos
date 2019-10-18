@@ -315,12 +315,7 @@ ordered_tick_asc (const struct list_elem *thread_a_elem, const struct list_elem 
   struct thread *thread_a = list_entry (thread_a_elem, struct thread, thread_elem);
   struct thread *thread_b = list_entry (thread_b_elem, struct thread, thread_elem);
   
-  if(thread_a -> wake_up_ticks == thread_b -> wake_up_ticks) {
-    return thread_a -> priority > thread_b -> priority;
-  }
-  else{
-    return thread_a->wake_up_ticks < thread_b->wake_up_ticks;
-  }
+  return thread_a -> wake_up_ticks < thread_b -> wake_up_ticks;
 }
 
 // my_code
