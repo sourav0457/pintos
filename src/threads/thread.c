@@ -418,7 +418,7 @@ thread_set_priority (int new_priority)
   current_thread->priority = new_priority;
   if(!list_empty(&ready_list)){
     struct list_elem *front = list_front(&ready_list);
-    struct thread * t = list_entry(front, struct thread, thread_elem);
+    struct thread * t = list_entry(front, struct thread, elem);
     if(t!=NULL && t -> tid!=2 && t -> priority > current_thread -> priority){
     // The thread will automatically get inserted in order when thread_yield is called
     thread_yield();
