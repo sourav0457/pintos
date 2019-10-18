@@ -41,6 +41,10 @@
 
    - up or "V": increment the value (and wake up one waiting
      thread, if any). */
+
+static bool ordered_priority_dsc_sema (const struct list_elem *, const struct list_elem *,
+                                  void *);
+
 void
 sema_init (struct semaphore *sema, unsigned value) 
 {
@@ -49,6 +53,19 @@ sema_init (struct semaphore *sema, unsigned value)
   sema->value = value;
   list_init (&sema->waiters);
 }
+
+static bool
+ordered_priority_dsc_sema (const struct list_elem *a_, const struct list_elem *b_,
+                      void *aux)
+{
+    struct thread *a = list_entry (a_, struct thread, elem);
+    struct thread *b = list_entry (b_, struct thread, elem);
+    ASSERT (a != NULL);
+    ASSERT (b != NULL);
+
+    return a->priority > b->priority;
+}
+
 
 /* Down or "P" operation on a semaphore.  Waits for SEMA's value
    to become positive and then atomically decrements it.
@@ -68,7 +85,8 @@ sema_down (struct semaphore *sema)
   old_level = intr_disable ();
   while (sema->value == 0) 
     {
-      list_push_back (&sema->waiters, &thread_current ()->elem);
+//      list_push_back (&sema->waiters, &thread_current ()->elem);
+      list_insert_ordered(&sema->waiters, &thread_current()->elem, ordered_priority_dsc_sema, NULL);
       thread_block ();
     }
   sema->value--;
@@ -113,10 +131,15 @@ sema_up (struct semaphore *sema)
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters)) 
-    thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
+  struct thread * p = NULL;
+  if (!list_empty (&sema->waiters)) {
+      p = list_entry(list_pop_front(&sema->waiters), struct thread, elem);
+      thread_unblock (p);
+  }
   sema->value++;
+  if(p!=NULL &&p->tid!=2 && p->priority> thread_current()->priority){
+       thread_yield();
+  }
   intr_set_level (old_level);
 }
 

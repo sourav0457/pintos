@@ -214,6 +214,21 @@ thread_create (const char *name, int priority,
 //    printf(" caling thread_unblock for thread priority %d", t->priority);
     thread_unblock (t);
     struct thread *current_thread = thread_current ();
+//    printf(" printing thre ready queue");
+//    struct list_elem * e;
+//    for(e = list_begin(&ready_list); e!= list_end(&ready_list); e = list_next(e)){
+//        struct thread * t = list_entry(e, struct thread,elem);
+//        printf("ready  thread priority is  %d",t->priority);
+//    }
+//    list_push_back(&ready_list,&current_thread->elem);
+//    list_sort(&ready_list,ordered_priority_dsc, NULL);
+//    list_insert_ordered(&ready_list, &current_thread->elem, ordered_priority_dsc, NULL);
+
+//    struct list_elem * e1;
+//    for(e1 = list_begin(&ready_list); e1!= list_end(&ready_list); e1 = list_next(e)){
+//        struct thread * t = list_entry(e1, struct thread,elem);
+//        printf("ready  thread priority is  %d",t->priority);
+//    }
   if(current_thread->priority < t->priority){
 //      printf(" Hi I am here in this thred with priority %d and current thread priority %d      ",t->priority, current_thread->priority);
       thread_yield();
@@ -258,6 +273,7 @@ thread_unblock (struct thread *t) {
 //    if (t != ideal_thread) {
 //    printf(" thread being pushed is %d   ", t->priority);
     list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
+//    list_push_back(&ready_list,&t->elem);
 //    struct list_elem * e;
 //    for (e = list_begin (&ready_list); e != list_end (&ready_list);
 //         e = list_next (e))
@@ -318,8 +334,10 @@ static bool
 ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
                   void *aux)
 {
-    struct thread *a = list_entry (a_, struct thread, thread_elem);
-    struct thread *b = list_entry (b_, struct thread, thread_elem);
+    struct thread *a = list_entry (a_, struct thread, elem);
+    struct thread *b = list_entry (b_, struct thread, elem);
+    ASSERT (a != NULL);
+    ASSERT (b != NULL);
 
     return a->priority > b->priority;
 }
@@ -391,7 +409,6 @@ thread_yield (void)
 //      list_push_back(&ready_list, &cur->elem);
 // changing for priority preempt as it has to come in an ordered way
       list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
-
   }
   cur->status = THREAD_READY;
   schedule ();
@@ -439,22 +456,30 @@ thread_set_priority (int new_priority)
 {
 
   thread_current ()->priority = new_priority;
+    if(!list_empty(&ready_list)) {
+        struct list_elem *front = list_front(&ready_list);
+        struct thread *t = list_entry(front,
+        struct thread, elem);
+        if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
+            thread_yield();
+        }
+    }
 //  struct list_elem *front = list_front (&ready_list);
 //  struct thread * t = list_entry(front, struct thread, elem);
-  struct thread *current_thread = thread_current ();
-    if(thread_current ()->status == THREAD_READY){
-//      printf(" removing the thread with ready state to lower priority");
-      list_remove (&thread_current ()->elem);
-      list_insert_ordered(&ready_list, &thread_current ()->elem, ordered_priority_dsc, NULL);
-  }
-  else if(thread_current ()->status == THREAD_RUNNING){
-//      if(new_priority< t->priority){
-        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority){
-//printf(" current thread priority reduced to %d and queue head priority  ", new_priority );
-//          thread_yield_priority(current_thread);
-            thread_yield();
-      }
-  }
+//  struct thread *current_thread = thread_current ();
+//    if(thread_current ()->status == THREAD_READY){
+////      printf(" removing the thread with ready state to lower priority");
+//      list_remove (&thread_current ()->elem);
+//      list_insert_ordered(&ready_list, &thread_current ()->elem, ordered_priority_dsc, NULL);
+//  }
+//  else if(thread_current ()->status == THREAD_RUNNING){
+////      if(new_priority< t->priority){
+//        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority){
+////printf(" current thread priority reduced to %d and queue head priority  ", new_priority );
+////          thread_yield_priority(current_thread);
+//            thread_yield();
+//      }
+//  }
 }
 
 /* Returns the current thread's priority. */
