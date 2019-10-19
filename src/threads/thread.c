@@ -28,9 +28,6 @@ static struct list ready_list;
 // Creating a pointer to a list which arranges threads based on their wake_up_time
 static struct list ordered_sleep_list;
 
-static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *);
-static bool priority_desc (const struct list_elem *, const struct list_elem *);
-
 struct thread *thread_to_sleep;
 
 /* List of all processes.  Processes are added to this list
