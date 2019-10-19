@@ -121,7 +121,6 @@ void thread_print_stats (void);
 
 static bool ordered_tick_asc (const struct list_elem *, const struct list_elem *);
 static bool priority_desc (const struct list_elem *, const struct list_elem *);
-void test_max_priority (void)
 
 typedef void thread_func (void *aux);
 tid_t thread_create (const char *name, int priority, thread_func *, void *);
