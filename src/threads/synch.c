@@ -44,6 +44,10 @@
 
 static bool ordered_priority_dsc_sema (const struct list_elem *, const struct list_elem *,
                                   void *);
+bool semaMatch(const struct list_elem *, const struct list_elem *, void *aux UNUSED);
+
+bool compareElements(const struct list_elem *, const struct list_elem *, void *aux UNUSED);
+
 
 void
 sema_init (struct semaphore *sema, unsigned value) 
@@ -319,6 +323,7 @@ cond_wait (struct condition *cond, struct lock *lock)
   
   sema_init (&waiter.semaphore, 0);
   list_push_back (&cond->waiters, &waiter.elem);
+  list_sort(&cond->waiters,semaMatch, NULL);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
@@ -340,7 +345,10 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)) 
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
+  {
+      list_sort(&cond->waiters,semaMatch, NULL);
+  }
+      sema_up (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
 }
 
@@ -359,3 +367,18 @@ cond_broadcast (struct condition *cond, struct lock *lock)
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
 }
+bool compareElements(const struct list_elem *one, const struct list_elem *two, void *aux UNUSED){
+    struct thread *t1 = list_entry(one, struct thread, elem);
+    struct thread *t2 = list_entry(two, struct thread, elem);
+    return t1->priority > t2->priority;
+}
+bool semaMatch(const struct list_elem *one, const struct list_elem *two, void *aux UNUSED)
+  {
+    struct semaphore_elem *s1 = list_entry(one, struct semaphore_elem, elem);
+    struct semaphore_elem *s2 = list_entry(two, struct semaphore_elem, elem);
+    if(list_empty(&s2->semaphore.waiters)) return true;
+    if(list_empty(&s1->semaphore.waiters)) return false;
+    list_sort(&s1->semaphore.waiters, compareElements, NULL);
+    list_sort(&s2->semaphore.waiters, compareElements, NULL);
+    return compareElements(list_front(&s1->semaphore.waiters), list_front(&s2->semaphore.waiters), NULL);
+  }
