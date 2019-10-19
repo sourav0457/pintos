@@ -327,13 +327,16 @@ void thread_sleep(int64_t ticks) {
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
+  enum intr_level old_level = intr_disable();
   // printf("Current thread pid: %d, wake up ticks: %d, current ticks: %d, priority: %d", current_thread -> tid, current_thread -> wake_up_ticks, timer_ticks(), current_thread -> priority);
 
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
   list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
-  sema_down(&current_thread -> thread_sema_value);
+  // sema_down(&current_thread -> thread_sema_value);
+  thread_block();
+  intr_set_level(old_level);
 }
 
 void thread_wakeup() {
@@ -341,8 +344,11 @@ void thread_wakeup() {
     struct list_elem *front = list_front (&ordered_sleep_list);
     struct thread * t = list_entry(front, struct thread, thread_elem);
     if(t->wake_up_ticks <= timer_ticks()) {
-      sema_up(&t->thread_sema_value);
+      enum intr_level old_level = intr_disable();
+      thread_unblock(t);
+      //sema_up(&t->thread_sema_value);
       list_pop_front(&ordered_sleep_list);
+      intr_set_level(old_level);
     }
     else
       break; 
@@ -384,27 +390,6 @@ thread_yield (void)
   if (cur != idle_thread) {
     list_insert_ordered(&ready_list, &cur->elem, priority_desc, NULL);
     // list_push_back (&ready_list, &cur->elem);
-  }
-  cur->status = THREAD_READY;
-  schedule ();
-  intr_set_level (old_level);
-}
-
-void
-thread_yield_current (struct thread *cur)
-{
-  ASSERT (is_thread (cur));
-  enum intr_level old_level;
-
-  ASSERT (!intr_context ());
-
-  old_level = intr_disable ();
-  if (cur != idle_thread) {
-    /* For PRIORITY propose
-     * Change the ready_list to an ordered list in order to make sure that
-     * the thread with highest priority in the ready list get run first
-     */
-    list_insert_ordered(&ready_list, &cur->elem, priority_desc, NULL);
   }
   cur->status = THREAD_READY;
   schedule ();
