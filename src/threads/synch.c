@@ -131,10 +131,10 @@ sema_up (struct semaphore *sema)
   }
   sema->value++;
   intr_set_level (old_level);
-  if (next != NULL && next->priority > current->priority)
-  {
-    thread_yield_current (current);
-  }
+  // if (next != NULL && next->priority > current->priority)
+  // {
+  //   thread_yield ();
+  // }
 }
 
 static void sema_test_helper (void *sema_);
@@ -340,9 +340,9 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
 
   if (!list_empty (&cond->waiters)) {
     list_sort(&cond->waiters, cond_wait_priority, NULL);
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
-                          struct semaphore_elem, elem)->semaphore);
   }
+  sema_up (&list_entry (list_pop_front (&cond->waiters),
+                          struct semaphore_elem, elem)->semaphore);
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
