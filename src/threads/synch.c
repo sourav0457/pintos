@@ -33,6 +33,7 @@
 #include "threads/thread.h"
 
 static bool cond_wait_priority(const struct list_elem *, const struct list_elem *);
+static bool cond_priority_desc (const struct list_elem *, const struct list_elem *);
 
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
    nonnegative integer along with two atomic operators for
@@ -344,6 +345,15 @@ cond_broadcast (struct condition *cond, struct lock *lock)
 }
 
 static bool
+cond_priority_desc (const struct list_elem *thread_a_elem, const struct list_elem *thread_b_elem) 
+{
+  struct thread *thread_a = list_entry (thread_a_elem, struct thread, elem);
+  struct thread *thread_b = list_entry (thread_b_elem, struct thread, elem);
+  
+  return thread_a -> priority > thread_b -> priority;
+}
+
+static bool
 cond_wait_priority(const struct list_elem* a, const struct list_elem *b)
 {
   const struct semaphore_elem *sa = list_entry(a, struct semaphore_elem, elem);
@@ -352,8 +362,8 @@ cond_wait_priority(const struct list_elem* a, const struct list_elem *b)
     return true;
   if(list_empty(&sa->semaphore.waiters))
     return false;
-  list_sort(&sa->semaphore.waiters, priority_desc, NULL);
-  list_sort(&sb->semaphore.waiters, priority_desc, NULL);
+  list_sort(&sa->semaphore.waiters, cond_priority_desc, NULL);
+  list_sort(&sb->semaphore.waiters, cond_priority_desc, NULL);
 
   struct thread *ta = list_entry(list_front(&sa -> semaphore.waiters), struct thread, elem);
   struct thread *tb = list_entry(list_front(&sb -> semaphore.waiters), struct thread, elem);
