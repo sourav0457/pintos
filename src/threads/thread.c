@@ -667,6 +667,31 @@ allocate_tid (void)
 
   return tid;
 }
+
+void test_max_priority (void)
+{
+  if ( list_empty(&ready_list) )
+    {
+      return;
+    }
+  struct thread *t = list_entry(list_front(&ready_list),
+				struct thread, elem);
+  if (intr_context())
+    {
+      thread_ticks++;
+      if ( thread_current()->priority < t->priority ||
+	   (thread_ticks >= TIME_SLICE &&
+	    thread_current()->priority == t->priority) )
+	{
+	  intr_yield_on_return();
+	}
+      return;
+    }
+  if (thread_current()->priority < t->priority)
+    {
+      thread_yield();
+    }
+}
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
