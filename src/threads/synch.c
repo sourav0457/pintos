@@ -202,6 +202,7 @@ lock_init (struct lock *lock)
 
   lock->holder = NULL;
   sema_init (&lock->semaphore, 1);
+  lock->lock_max_priority = -1; // having a default value as -1 for priority donation
 }
 
 /* Acquires LOCK, sleeping until it becomes available if
@@ -218,6 +219,19 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
+  enum intr_level old_level;
+  old_level = intr_disable ();
+  struct thread * curr = thread_current();
+  struct thread * holder = lock->holder;
+  if(holder !=NULL){
+      curr->blocked_by_lock = lock;
+  }
+//  if(!thread_mlfqs){
+//      while(holder !=NULL && holder->priority < curr->priority){
+//        holder->original_priority = holder->priority;
+////        thread_set_
+//      }
+//  }
 
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
