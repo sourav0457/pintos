@@ -5,6 +5,9 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+// Deep--
+#include "fixed-point.h"
+// --Deep
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -97,6 +100,10 @@ struct thread
     struct semaphore thread_sema_value; /* The semphore value of the thread */
     int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
     struct list_elem thread_elem;
+    //Deep--
+    int nice;
+    int recent_cpu;
+    //--Deep
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -149,5 +156,13 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+//Deep--
+void load_avg_mlfqs_calc (void);
+void priority_mlfqs_calc (struct thread *, void *);
+void priority_mlfqs_all (void);
+void compute_recent_cpu(struct thread *, void *);
+void recent_cpu_all (void);
+//--Deep
 
 #endif /* threads/thread.h */
