@@ -62,7 +62,7 @@ sema_init (struct semaphore *sema, unsigned value)
 
 static bool
 ordered_priority_dsc_sema (const struct list_elem *a_, const struct list_elem *b_,
-                      void *aux)
+                      void *aux UNUSED)
 {
     struct thread *a = list_entry (a_, struct thread, elem);
     struct thread *b = list_entry (b_, struct thread, elem);

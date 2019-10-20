@@ -347,7 +347,7 @@ thread_tid (void)
 
 static bool
 ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
-            void *aux) 
+            void *aux UNUSED) 
 {
   struct thread *a = list_entry (a_, struct thread, thread_elem);
   struct thread *b = list_entry (b_, struct thread, thread_elem);
@@ -357,7 +357,7 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
 
 static bool
 ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
-                  void *aux)
+                  void *aux UNUSED)
 {
     struct thread *a = list_entry (a_, struct thread, elem);
     struct thread *b = list_entry (b_, struct thread, elem);
@@ -448,24 +448,6 @@ thread_yield (void)
   intr_set_level (old_level);
 }
 
-void
-thread_yield_priority (struct thread * cur)
-{
-//    struct thread *cur = thread_current ();
-    enum intr_level old_level;
-
-    ASSERT (!intr_context ());
-
-    old_level = intr_disable ();
-    if (cur != idle_thread) {
-        list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
-    }
-//    list_push_back (&ready_list, &cur->elem);
-    cur->status = THREAD_READY;
-    schedule ();
-    intr_set_level (old_level);
-}
-
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */
 void
@@ -498,22 +480,6 @@ thread_set_priority (int new_priority)
             thread_yield();
         }
     }
-//  struct list_elem *front = list_front (&ready_list);
-//  struct thread * t = list_entry(front, struct thread, elem);
-//  struct thread *current_thread = thread_current ();
-//    if(thread_current ()->status == THREAD_READY){
-////      printf(" removing the thread with ready state to lower priority");
-//      list_remove (&thread_current ()->elem);
-//      list_insert_ordered(&ready_list, &thread_current ()->elem, ordered_priority_dsc, NULL);
-//  }
-//  else if(thread_current ()->status == THREAD_RUNNING){
-////      if(new_priority< t->priority){
-//        if(list_entry (list_begin(&ready_list),struct thread,elem)->priority>new_priority){
-////printf(" current thread priority reduced to %d and queue head priority  ", new_priority );
-////          thread_yield_priority(current_thread);
-//            thread_yield();
-//      }
-//  }
 }
 
 void thread_set_priority_donation(struct thread * t, int newPriority){
@@ -584,7 +550,7 @@ void load_avg_mlfqs_calc () {
     load_avg = add_fp_fp(load_avg_1, load_avg_2);
 }
 
-void priority_mlfqs_calc (struct thread *th, void *aux) {
+void priority_mlfqs_calc (struct thread *th, void *aux UNUSED) {
   //if (th != idle_thread) {
     int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
     if (priority_mlfqs < PRI_MIN)
@@ -602,7 +568,7 @@ void priority_mlfqs_all () {
   }
 }
 
-void compute_recent_cpu(struct thread *th, void *aux) {
+void compute_recent_cpu(struct thread *th, void *aux UNUSED) {
   if (th != idle_thread) {
     int coeff;
     coeff = div_fp_fp(mul_fp_int(load_avg, 2), add_fp_int (mul_fp_int(load_avg, 2), 1));

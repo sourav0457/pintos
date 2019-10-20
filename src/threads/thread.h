@@ -125,7 +125,7 @@ extern bool thread_mlfqs;
 void thread_init (void);
 void thread_start (void);
 void thread_sleep(int64_t);
-void thread_wakeup();
+void thread_wakeup(void);
 
 void thread_tick (void);
 void thread_print_stats (void);
