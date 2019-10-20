@@ -157,6 +157,19 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
+  if (thread_mlfqs) {
+    if (t != idle_thread) {
+      t->recent_cpu = add_fp_int(t->recent_cpu, 1);
+      }
+    if (timer_ticks()%100 == 0) {
+      load_avg_mlfqs_calc ();
+      recent_cpu_all ();
+    }
+    if (timer_ticks()%4 == 0) {
+      priority_mlfqs_all ();
+    }
+  }
+  
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
