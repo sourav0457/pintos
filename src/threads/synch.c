@@ -87,7 +87,9 @@ sema_down (struct semaphore *sema)
 
   ASSERT (sema != NULL);
   ASSERT (!intr_context ());
-
+//  if(sema->value ==0) {
+//      printf(" thread with priority %d going down ", thread_current()->priority);
+//  }
   old_level = intr_disable ();
   while (sema->value == 0) 
     {
@@ -227,18 +229,35 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
   enum intr_level old_level;
-  old_level = intr_disable();
+  struct lock * lock_nested;
   struct thread * curr = thread_current();
   struct thread * holder;
+  old_level = intr_disable();
+  lock_nested = lock;
   if(lock->holder !=NULL){
       curr->blocked_by_lock = lock;
   }
   holder = lock->holder;
-  if(!thread_mlfqs){
-      if(holder != NULL && holder->priority < curr->priority){
-          thread_set_priority_donation(holder,curr->priority);
+
+    if(!thread_mlfqs){
+      while(holder != NULL && holder->priority < curr->priority){
+          thread_set_priority_donation(holder,curr->priority,true);
+          if(lock_nested->max_priority < curr->priority){
+              lock_nested->max_priority = curr->priority;
+          }
+          if(holder->blocked_by_lock !=NULL ){
+              lock_nested = holder->blocked_by_lock;
+              holder = holder->blocked_by_lock->holder;
+          }
+          else {
+              break;
+          }
       }
   }
+  struct semaphore * sema = &lock->semaphore;
+//  if(sema->value==0){
+//      printf(" thread is going down with priority %d  ",curr->priority);
+//  }
   sema_down (&lock->semaphore);
   lock->holder = curr;
   if(!thread_mlfqs){
@@ -289,7 +308,23 @@ lock_release (struct lock *lock)
       lock->max_priority = -1;
       if(list_empty(&curr->acquired_locks)){
           thread_set_priority(curr->original_priority);
+          curr->is_donated = false;
       }
+      else{
+          struct list_elem *front = list_front(&curr->acquired_locks);
+          struct lock *t = list_entry(front,
+          struct lock, lock_elem);
+          if(t->max_priority != -1){
+//              thread_set_priority_donation(curr,t->max_priority);
+              thread_set_priority_donation(curr,t->max_priority,true);// once lock is released , if the other lock in the queue is acquiring a lock then the thrread
+                                                                  // gets the priority of lock's maximum level
+          }
+          else{
+              thread_set_priority(curr->original_priority);
+              curr->is_donated = false;
+          }
+      }
+
   }
   intr_set_level(old_level);
 }
