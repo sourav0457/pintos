@@ -48,6 +48,8 @@ bool semaMatch(const struct list_elem *, const struct list_elem *, void *aux UNU
 
 bool compareElements(const struct list_elem *, const struct list_elem *, void *aux UNUSED);
 
+bool compareLock(const struct list_elem *, const struct list_elem *, void *aux UNUSED);
+
 
 void
 sema_init (struct semaphore *sema, unsigned value) 
@@ -205,6 +207,7 @@ lock_init (struct lock *lock)
   ASSERT (lock != NULL);
 
   lock->holder = NULL;
+  lock->max_priority = -1; // default value
   sema_init (&lock->semaphore, 1);
 }
 
@@ -222,9 +225,27 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-
+  enum intr_level old_level;
+  old_level = intr_disable();
+  struct thread * curr = thread_current();
+  struct thread * holder;
+  if(lock->holder !=NULL){
+      curr->blocked_by_lock = lock;
+  }
+  holder = lock->holder;
+  if(!thread_mlfqs){
+      if(holder != NULL && holder->priority < curr->priority){
+          thread_set_priority_donation(holder,curr->priority);
+      }
+  }
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  lock->holder = curr;
+  if(!thread_mlfqs){
+      curr->blocked_by_lock = NULL;
+      list_insert_ordered(&curr->acquired_locks, &lock->lock_elem, compareLock, NULL);
+  }
+//  lock->holder = thread_current ();
+  intr_set_level(old_level);
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -257,10 +278,21 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-
+  enum intr_level old_level;
+  old_level = intr_disable();
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+  struct thread * curr = thread_current();
+  if(!thread_mlfqs){
+      list_remove(&lock->lock_elem);
+      lock->max_priority = -1;
+      if(list_empty(&curr->acquired_locks)){
+          thread_set_priority(curr->original_priority);
+      }
+  }
+  intr_set_level(old_level);
 }
+
 
 /* Returns true if the current thread holds LOCK, false
    otherwise.  (Note that testing whether some other thread holds
@@ -382,3 +414,8 @@ bool semaMatch(const struct list_elem *one, const struct list_elem *two, void *a
     list_sort(&s2->semaphore.waiters, compareElements, NULL);
     return compareElements(list_front(&s1->semaphore.waiters), list_front(&s2->semaphore.waiters), NULL);
   }
+bool compareLock(const struct list_elem *one, const struct list_elem *two, void *aux UNUSED){
+    struct lock *l1 = list_entry(one, struct lock, lock_elem);
+    struct lock *l2 = list_entry(two, struct lock, lock_elem);
+    return l1->max_priority >= l2->max_priority;
+}
