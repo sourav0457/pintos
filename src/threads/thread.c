@@ -493,8 +493,8 @@ thread_set_priority (int new_priority)
 void thread_set_priority_donation(struct thread * t, int newPriority){
     struct thread * curr = thread_current();
 //    t->original_priority = t->priority;
-    enum intr_level old_level;
-    old_level = intr_disable();
+//    enum intr_level old_level;
+//    old_level = intr_disable();
     t->priority = newPriority;
     t->is_donated = true;
     if(t->status == THREAD_READY){
@@ -509,7 +509,7 @@ void thread_set_priority_donation(struct thread * t, int newPriority){
             }
         }
     }
-    intr_set_level(old_level);
+//    intr_set_level(old_level);
 }
 
 /* Returns the current thread's priority. */
