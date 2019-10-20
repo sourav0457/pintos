@@ -157,12 +157,16 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
-    if (thread_mlfqs)
-      t->recent_cpu = add_fp_int(t->recent_cpu, 1);
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
+
+  if (thread_mlfqs) {
+    if (t != idle_thread) {
+      t->recent_cpu = add_fp_int(t->recent_cpu, 1);
+    }
+  }
 }
 
 /* Prints thread statistics. */
@@ -541,7 +545,7 @@ void load_avg_mlfqs_calc () {
     int num_ready_threads = list_size(&ready_list);
     struct thread *current_thread = thread_current();
     if (&current_thread != idle_thread) {
-        num_ready_threads = num_ready_threads + 1;
+      num_ready_threads = num_ready_threads + 1;
     }
 
     int load_avg_1 = mul_fp_fp(div_fp_int(int_to_fp(59), 60), load_avg);
@@ -550,12 +554,14 @@ void load_avg_mlfqs_calc () {
 }
 
 void priority_mlfqs_calc (struct thread *th, void *aux) {
-  int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
-  if (priority_mlfqs < PRI_MIN)
+  if (th != idle_thread) {
+    int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
+    if (priority_mlfqs < PRI_MIN)
       priority_mlfqs = PRI_MIN;
-  if (priority_mlfqs > PRI_MAX)
+    else if (priority_mlfqs > PRI_MAX)
       priority_mlfqs = PRI_MAX;
-  th->priority = priority_mlfqs;
+    th->priority = priority_mlfqs;
+  }
 }
 
 void priority_mlfqs_all () {
