@@ -538,7 +538,7 @@ thread_get_nice (void)
 void load_avg_mlfqs_calc () {
     int num_ready_threads = list_size(&ready_list);
     struct thread *current_thread = thread_current();
-    if (&current_thread != idle_thread) {
+    if (current_thread != idle_thread) {
       num_ready_threads = num_ready_threads + 1;
     }
 
@@ -569,7 +569,7 @@ void compute_recent_cpu(struct thread *th, void *aux) {
   if (th != idle_thread) {
     int coeff;
     coeff = div_fp_fp(mul_fp_int(load_avg, 2), add_fp_int (mul_fp_int(load_avg, 2), 1));
-    th->recent_cpu = add_fp_int(mul_fp_int(coeff, th->recent_cpu), th->nice);
+    th->recent_cpu = add_fp_int(mul_fp_fp(coeff, th->recent_cpu), th->nice);
   }
 }
 
