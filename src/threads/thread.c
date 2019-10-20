@@ -21,11 +21,6 @@
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
-// Deep--
-static int load_avg;
-static struct list mlfqs_list;
-// --Deep
-
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
@@ -88,6 +83,10 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+// Deep--
+static int load_avg;
+// --Deep
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -111,10 +110,10 @@ thread_init (void)
   list_init (&all_list);
   list_init(&ordered_sleep_list);
 
-  if (thread_mlfqs) {
-    list_init (&mlfqs_list);
-    load_avg = 0;
-  }
+  // if (thread_mlfqs) {
+  //   list_init (&mlfqs_list);
+  //   load_avg = 0;
+  // }
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -122,10 +121,13 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 
-  if (thread_mlfqs) {
-    initial_thread -> nice = 0;
-    initial_thread->recent_cpu = int_to_fp(0);
-  }
+  // if (thread_mlfqs) {
+  //   initial_thread -> nice = 0;
+  //   initial_thread->recent_cpu = int_to_fp(0);
+  // }
+  // --deep
+  load_avg = 0;
+  // --deep
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -437,11 +439,7 @@ thread_yield (void)
 //      list_push_back(&ready_list, &cur->elem);
 // changing for priority preempt as it has to come in an ordered way
   if (cur != idle_thread) {
-    if (thread_mlfqs) {
-      list_insert_ordered (&mlfqs_list, &cur->elem, ordered_priority_dsc, NULL);
-    } else {
-      list_insert_ordered (&ready_list, &cur->elem, ordered_priority_dsc, NULL);
-    }
+    list_insert_ordered (&ready_list, &cur->elem, ordered_priority_dsc, NULL);
   }
   cur->status = THREAD_READY;
   schedule ();
@@ -528,7 +526,6 @@ thread_set_nice (int nice /*UNUSED*/)
   /* Not yet implemented. */
   // Deep --
   if (nice >= NICE_MIN && nice <= NICE_MAX) {
-    printf("Inside thread_set_nice");
     struct thread *current_thread = thread_current();
     current_thread->nice = nice;
     compute_recent_cpu(&current_thread, NULL);
@@ -544,7 +541,6 @@ thread_get_nice (void)
   /* Not yet implemented. */
   //return 0;
   // Deep --
-  printf("Inside thread_get_nice");
   struct thread *current_thread = thread_current();
   return current_thread->nice;
   // -- Deep
@@ -563,7 +559,6 @@ thread_get_load_avg (void)
 
 void load_avg_mlfqs_calc () {
     int num_ready_threads = list_size(&ready_list);
-    printf("Inside load_avg_mlfqs_calc");
     struct thread *current_thread = thread_current();
     if (&current_thread != idle_thread) {
         num_ready_threads = num_ready_threads + 1;
@@ -581,14 +576,16 @@ thread_get_recent_cpu (void)
   /* Not yet implemented. */
   //return 0;
   // Deep --
-  printf("Inside get_recent_cpu");
   struct thread *current_thread = thread_current();
   return fp_to_int_towards_nearest (mul_fp_int(current_thread -> recent_cpu, 100));
   // -- Deep
 }
 
 void priority_mlfqs_calc (struct thread *th, void *aux) {
-  printf("Inside priority_mlfqs_calc");
+  //--deep
+  if(th == idle_thread)
+    return;
+  // --deep
   int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
   if (priority_mlfqs < PRI_MIN)
       priority_mlfqs = PRI_MIN;
@@ -605,6 +602,8 @@ void priority_mlfqs_all () {
 }
 
 void compute_recent_cpu(struct thread *th, void *aux) {
+    if(th == idle_thread)
+      return;
     int coeff;
     coeff = div_fp_fp(mul_fp_int(load_avg, 2), add_fp_int (mul_fp_int(load_avg, 2), 1));
     th->recent_cpu = add_fp_int(mul_fp_int(coeff, th->recent_cpu), th->nice);
@@ -712,14 +711,21 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 
-  printf("Inside init_thread");
-  struct thread *current_thread = thread_current();
-  if (thread_mlfqs) {
-    if (t != initial_thread) {
-      t->nice = thread_get_nice();
-      t->recent_cpu = current_thread->recent_cpu;
-    }
+  if(thread_mlfqs){
+    t->nice = NICE_DEFAULT;
+    if(t == initial_thread)
+      t->recent_cpu = 0;
+    else
+      t->recent_cpu = thread_get_recent_cpu();
   }
+
+  // struct thread *current_thread = thread_current();
+  // if (thread_mlfqs) {
+  //   if (t != initial_thread) {
+  //     t->nice = thread_get_nice();
+  //     t->recent_cpu = current_thread->recent_cpu;
+  //   }
+  // }
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

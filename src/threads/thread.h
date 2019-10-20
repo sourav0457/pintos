@@ -26,6 +26,7 @@ typedef int tid_t;
 #define PRI_MAX 63                      /* Highest priority. */
 
 #define NICE_MIN -20
+#define NICE_DEFAULT 0
 #define NICE_MAX 20
 
 /* A kernel thread or user process.
@@ -150,7 +151,7 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
-void thread_set_nice (int nice /*UNUSED*/);
+
 void load_avg_mlfqs_calc ();
 void priority_mlfqs_calc (struct thread *th, void *aux);
 void priority_mlfqs_all ();

@@ -178,7 +178,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  print("Inside timer interrupt");
   struct thread *current_thread = thread_current();
   if (thread_mlfqs) {
     current_thread->recent_cpu = add_fp_int(current_thread->recent_cpu, 1);
@@ -186,7 +185,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
       load_avg_mlfqs_calc ();
       recent_cpu_all ();
     }
-    if (timer_ticks()%4 == 0) {
+    if (timer_ticks()%4 == 3) {
       priority_mlfqs_all ();
     }
   }
