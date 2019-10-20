@@ -161,12 +161,6 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
-
-  if (thread_mlfqs) {
-    if (t != idle_thread) {
-      t->recent_cpu = add_fp_int(t->recent_cpu, 1);
-    }
-  }
 }
 
 /* Prints thread statistics. */
@@ -581,6 +575,13 @@ void compute_recent_cpu(struct thread *th, void *aux) {
 
 void recent_cpu_all () {
   thread_foreach (compute_recent_cpu, NULL);
+}
+
+void recent_cpu_plus () {
+  struct thread *current_thread = thread_current();
+    if (current_thread != idle_thread) {
+      current_thread->recent_cpu = add_fp_int(current_thread->recent_cpu, 1);
+    }
 }
 
 /* Returns 100 times the system load average. */
