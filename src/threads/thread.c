@@ -538,13 +538,6 @@ thread_set_nice (int nice /*UNUSED*/)
         if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
             thread_yield();
         }
-    //if (current_thread != idle_thread) {
-      //if (list_entry(list_begin(&ready_list), struct thread, elem)->priority > current_thread -> priority) {
-       // enum intr_level old_level;
-        //old_level = intr_disable();
-        //thread_yield();
-       // intr_set_level(old_level);
-      //}
     }
   }
 }
@@ -570,14 +563,14 @@ void load_avg_mlfqs_calc () {
 }
 
 void priority_mlfqs_calc (struct thread *th, void *aux) {
-  if (th != idle_thread) {
+  //if (th != idle_thread) {
     int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
     if (priority_mlfqs < PRI_MIN)
       priority_mlfqs = PRI_MIN;
     else if (priority_mlfqs > PRI_MAX)
       priority_mlfqs = PRI_MAX;
     th->priority = priority_mlfqs;
-  }
+  //}
 }
 
 void priority_mlfqs_all () {
@@ -597,13 +590,6 @@ void compute_recent_cpu(struct thread *th, void *aux) {
 
 void recent_cpu_all () {
   thread_foreach (compute_recent_cpu, NULL);
-}
-
-void recent_cpu_plus () {
-  struct thread *current_thread = thread_current();
-    if (current_thread != idle_thread) {
-      current_thread->recent_cpu = add_fp_int(current_thread->recent_cpu, 1);
-    }
 }
 
 /* Returns 100 times the system load average. */

@@ -157,7 +157,6 @@ void priority_mlfqs_calc (struct thread *, void *);
 void priority_mlfqs_all (void);
 void compute_recent_cpu(struct thread *, void *);
 void recent_cpu_all (void);
-void recent_cpu_plus (void);
 //--Deep
 
 #endif /* threads/thread.h */
