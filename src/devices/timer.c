@@ -180,6 +180,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   thread_tick ();
   struct thread *current_thread = thread_current();
   if (thread_mlfqs) {
+    struct thread *current_thread = thread_current();
     current_thread->recent_cpu = add_fp_int(current_thread->recent_cpu, 1);
     if (timer_ticks()%TIMER_FREQ == 0) {
       load_avg_mlfqs_calc ();
