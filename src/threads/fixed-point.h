@@ -3,6 +3,8 @@
 // x & y are fixed point numbers, n is an integer
 // to be included in timer.c and thread.c
 
+#ifndef THREADS_FIXEDPOINT_H
+#define THREADS_FIXEDPOINT_H
 #define F (1 << 14)
 
 // Conversions
@@ -19,3 +21,5 @@ int add_fp_int (int x, int n) {return x + n * F;}
 int sub_fp_int (int x, int n) {return x - n * F;}
 int mul_fp_int (int x, int n) {return x * n;}
 int div_fp_int (int x, int n) {return x / n;}
+
+#endif

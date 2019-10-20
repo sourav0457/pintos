@@ -449,8 +449,7 @@ thread_yield (void)
   intr_set_level (old_level);
 }
 
-void
-thread_yield_priority (struct thread * cur)
+void thread_yield_priority (struct thread *cur)
 {
 //    struct thread *cur = thread_current ();
     enum intr_level old_level;
