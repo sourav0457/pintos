@@ -111,9 +111,9 @@ thread_init (void)
   list_init (&all_list);
   list_init(&ordered_sleep_list);
 
-  if (thread_mlfqs) {
+  //if (thread_mlfqs) {
     load_avg = 0;
-  }
+  //}
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
