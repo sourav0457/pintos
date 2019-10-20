@@ -23,7 +23,7 @@
 
 // Deep--
 static int load_avg;
-static struct list mlfqs_list;
+//static struct list mlfqs_list;
 // --Deep
 
 /* List of processes in THREAD_READY state, that is, processes
@@ -112,7 +112,6 @@ thread_init (void)
   list_init(&ordered_sleep_list);
 
   if (thread_mlfqs) {
-    list_init (&mlfqs_list);
     load_avg = 0;
   }
 
@@ -122,10 +121,10 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 
-  if (thread_mlfqs) {
+  /*if (thread_mlfqs) {
     initial_thread -> nice = 0;
     initial_thread->recent_cpu = int_to_fp(0);
-  }
+  } */
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -159,9 +158,11 @@ thread_tick (void)
   else if (t->pagedir != NULL)
     user_ticks++;
 #endif
-  else
+  else {
     kernel_ticks++;
-
+    if (thread_mlfqs)
+      t->recent_cpu = add_fp_int(t->recent_cpu, 1);
+  }
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
@@ -342,8 +343,7 @@ thread_tid (void)
 }
 
 static bool
-ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
-            void *aux) 
+ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_, void *aux) 
 {
   struct thread *a = list_entry (a_, struct thread, thread_elem);
   struct thread *b = list_entry (b_, struct thread, thread_elem);
@@ -352,8 +352,7 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
 }
 
 static bool
-ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
-                  void *aux)
+ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_, void *aux)
 {
     struct thread *a = list_entry (a_, struct thread, elem);
     struct thread *b = list_entry (b_, struct thread, elem);
@@ -437,12 +436,8 @@ thread_yield (void)
 //      list_push_back(&ready_list, &cur->elem);
 // changing for priority preempt as it has to come in an ordered way
   if (cur != idle_thread) {
-    if (thread_mlfqs) {
-      list_insert_ordered (&mlfqs_list, &cur->elem, ordered_priority_dsc, NULL);
-    } else {
       list_insert_ordered (&ready_list, &cur->elem, ordered_priority_dsc, NULL);
     }
-  }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -712,6 +707,11 @@ init_thread (struct thread *t, const char *name, int priority)
     if (t != initial_thread) {
       t->nice = thread_get_nice();
       t->recent_cpu = current_thread->recent_cpu;
+    }
+    else
+    {
+      t->nice = 0;
+      t->recent_cpu = int_to_fp(0);
     }
   }
 }

@@ -150,11 +150,10 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
-void thread_set_nice (int nice /*UNUSED*/);
 void load_avg_mlfqs_calc ();
-void priority_mlfqs_calc (struct thread *th, void *aux);
+void priority_mlfqs_calc (struct thread *, void *);
 void priority_mlfqs_all ();
-void compute_recent_cpu(struct thread *th, void *aux);
+void compute_recent_cpu(struct thread *, void *);
 void recent_cpu_all ();
 
 #endif /* threads/thread.h */
