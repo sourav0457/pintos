@@ -117,6 +117,8 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+  if (thread_mlfqs)
+    load_avg = int_to_fp(0);
 
 }
 
@@ -134,7 +136,7 @@ thread_start (void)
   intr_enable ();
 
   //Deep--
-  load_avg = int_to_fp(0);
+  //load_avg = int_to_fp(0);
   //--Deep
 
   /* Wait for the idle thread to initialize idle_thread. */
@@ -529,13 +531,20 @@ thread_set_nice (int nice /*UNUSED*/)
     struct thread *current_thread = thread_current();
     current_thread->nice = nice;
     priority_mlfqs_calc (current_thread, NULL);
-    if (current_thread != idle_thread) {
-      if (list_entry(list_begin(&ready_list), struct thread, elem)->priority > current_thread -> priority) {
-        enum intr_level old_level;
-        old_level = intr_disable();
-        thread_yield();
-        intr_set_level(old_level);
-      }
+    if(!list_empty(&ready_list)) {
+        struct list_elem *front = list_front(&ready_list);
+        struct thread *t = list_entry(front,
+        struct thread, elem);
+        if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
+            thread_yield();
+        }
+    //if (current_thread != idle_thread) {
+      //if (list_entry(list_begin(&ready_list), struct thread, elem)->priority > current_thread -> priority) {
+       // enum intr_level old_level;
+        //old_level = intr_disable();
+        //thread_yield();
+       // intr_set_level(old_level);
+      //}
     }
   }
 }
