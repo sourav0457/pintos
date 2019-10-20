@@ -178,12 +178,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-
+  struct thread *current_thread = thread_current();
   if (thread_mlfqs) {
-    struct thread *current_thread = thread_current();
-    if (&current_thread != idle_thread) {
-    current_thread->recent_cpu = add_fp_int(curent_thread->recent_cpu, 1);
-
+    current_thread->recent_cpu = add_fp_int(current_thread->recent_cpu, 1);
     if (timer_ticks()%TIMER_FREQ == 0) {
       load_avg_mlfqs_calc ();
       recent_cpu_all ();
@@ -192,10 +189,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
       priority_mlfqs_all ();
     }
   }
-
-
-
-
   thread_wakeup();
 }
 
