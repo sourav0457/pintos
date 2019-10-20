@@ -5,6 +5,9 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+//mlfqs
+#include "threads/fixed_point.h"
+//mlfqs
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -93,6 +96,10 @@ struct thread
     struct semaphore thread_sema_value; /* The semphore value of the thread */
     int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
     struct list_elem thread_elem;
+    //mlfqs
+    fixed_t recent_cpu;
+    int nice;
+    //mlfqs
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -143,5 +150,15 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+//mlfqs
+void thread_mlfqs_update_load_avg_and_recent_cpu (void);
+void calculate_load_avg (void);
+void calculate_priority (struct thread* cur, void *aux);
+void calculate_priority_foreach (void);
+void calculate_recent_cpu (struct thread* cur, void *aux);
+void calculate_recent_cpu_foreach (void);
+void incremented_recent_cpu (void);
+//mlfqs
 
 #endif /* threads/thread.h */
