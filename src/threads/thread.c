@@ -123,7 +123,7 @@ thread_init (void)
   initial_thread->tid = allocate_tid ();
 
   if (thread_mlfqs) {
-    initial_thread->nice = 0;
+    initial_thread -> nice = 0;
     initial_thread->recent_cpu = int_to_fp(0);
   }
 }
@@ -586,7 +586,7 @@ thread_get_recent_cpu (void)
 }
 
 void priority_mlfqs_calc (struct thread *th, void *aux) {
-    priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(compute_recent_cpu_for_thread(&th), 4)) - (th->nice * 2);
+    int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(compute_recent_cpu_for_thread(&th), 4)) - (th->nice * 2);
     if (priority_mlfqs < PRI_MIN)
         priority_mlfqs = PRI_MIN;
     if (priority_mlfqs > PRI_MAX)

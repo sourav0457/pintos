@@ -96,12 +96,11 @@ struct thread
     struct semaphore thread_sema_value; /* The semphore value of the thread */
     int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
     struct list_elem thread_elem;
+    int nice;                           /* Nice value for the thread */
+    int recent_cpu;                     /* Recent CPU value for the thread */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-
-    int nice;                           /* Nice value for the thread */
-    int recent_cpu;                     /* Recent CPU value for the thread */
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
