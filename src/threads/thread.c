@@ -557,7 +557,7 @@ thread_get_load_avg (void)
   /* Not yet implemented. */
   //return 0;
   // Deep --
-  return fp_to_int_towards_nearest(mul_fp_int(load_avg, 100))
+  return fp_to_int_towards_nearest(mul_fp_int(load_avg, 100));
   // -- Deep
 }
 
@@ -581,7 +581,7 @@ thread_get_recent_cpu (void)
   //return 0;
   // Deep --
   struct thread *current_thread = thread_current();
-  return fp_to_int_towards_nearest (mul_fp_int(current_thread -> recent_cpu, 100))
+  return fp_to_int_towards_nearest (mul_fp_int(current_thread -> recent_cpu, 100));
   // -- Deep
 }
 
