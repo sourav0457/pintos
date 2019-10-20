@@ -528,6 +528,7 @@ thread_set_nice (int nice /*UNUSED*/)
   /* Not yet implemented. */
   // Deep --
   if (nice >= NICE_MIN && nice <= NICE_MAX) {
+    printf("Inside thread_set_nice");
     struct thread *current_thread = thread_current();
     current_thread->nice = nice;
     compute_recent_cpu(&current_thread, NULL);
@@ -543,6 +544,7 @@ thread_get_nice (void)
   /* Not yet implemented. */
   //return 0;
   // Deep --
+  printf("Inside thread_get_nice");
   struct thread *current_thread = thread_current();
   return current_thread->nice;
   // -- Deep
@@ -561,6 +563,7 @@ thread_get_load_avg (void)
 
 void load_avg_mlfqs_calc () {
     int num_ready_threads = list_size(&ready_list);
+    printf("Inside load_avg_mlfqs_calc");
     struct thread *current_thread = thread_current();
     if (&current_thread != idle_thread) {
         num_ready_threads = num_ready_threads + 1;
@@ -578,12 +581,14 @@ thread_get_recent_cpu (void)
   /* Not yet implemented. */
   //return 0;
   // Deep --
+  printf("Inside get_recent_cpu");
   struct thread *current_thread = thread_current();
   return fp_to_int_towards_nearest (mul_fp_int(current_thread -> recent_cpu, 100));
   // -- Deep
 }
 
 void priority_mlfqs_calc (struct thread *th, void *aux) {
+  printf("Inside priority_mlfqs_calc");
   int priority_mlfqs = PRI_MAX - fp_to_int_towards_nearest(div_fp_int(th -> recent_cpu, 4)) - (th->nice * 2);
   if (priority_mlfqs < PRI_MIN)
       priority_mlfqs = PRI_MIN;
@@ -707,6 +712,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 
+  printf("Inside init_thread");
   struct thread *current_thread = thread_current();
   if (thread_mlfqs) {
     if (t != initial_thread) {
