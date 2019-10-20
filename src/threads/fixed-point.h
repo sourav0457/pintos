@@ -8,18 +8,18 @@
 #define F (1 << 14)
 
 // Conversions
-int int_to_fp (int n) {return n * F;}
-int fp_to_int_towards_zero (int n) {return n / F;}
-int fp_to_int_towards_nearest  (int n) {return (n >= 0 ? (n + F / 2) / F : (n - F / 2) / F);}
+#define int int_to_fp (int n) {return n * F;}
+#define int fp_to_int_towards_zero (int n) {return n / F;}
+#define int fp_to_int_towards_nearest  (int n) {return (n >= 0 ? (n + F / 2) / F : (n - F / 2) / F);}
 
 // Arithematic Operations
-int add_fp_fp (int x, int y) {return x + y;}
-int sub_fp_fp (int x, int y) {return x - y;}
-int mul_fp_fp (int x, int y) {return ((int64_t) x) * y / F;}
-int div_fp_fp (int x, int y) {return ((int64_t) x) * F / y;}
-int add_fp_int (int x, int n) {return x + n * F;}
-int sub_fp_int (int x, int n) {return x - n * F;}
-int mul_fp_int (int x, int n) {return x * n;}
-int div_fp_int (int x, int n) {return x / n;}
+#define int add_fp_fp (int x, int y) {return x + y;}
+#define int sub_fp_fp (int x, int y) {return x - y;}
+#define int mul_fp_fp (int x, int y) {return ((int64_t) x) * y / F;}
+#define int div_fp_fp (int x, int y) {return ((int64_t) x) * F / y;}
+#define int add_fp_int (int x, int n) {return x + n * F;}
+#define int sub_fp_int (int x, int n) {return x - n * F;}
+#define int mul_fp_int (int x, int n) {return x * n;}
+#define int div_fp_int (int x, int n) {return x / n;}
 
 #endif
