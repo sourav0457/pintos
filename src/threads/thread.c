@@ -705,7 +705,7 @@ init_thread (struct thread *t, const char *name, int priority)
   struct thread *current_thread = thread_current();
   if (thread_mlfqs) {
     if (t != initial_thread) {
-      t->nice = thread_get_nice();
+      t->nice = 0;
       t->recent_cpu = current_thread->recent_cpu;
     }
     else
