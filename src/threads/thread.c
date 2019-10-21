@@ -13,6 +13,7 @@
 #include "threads/vaddr.h"
 //Deep--
 #include "fixed-point.h"
+#include "devices/timer.h"
 //--Deep
 #ifdef USERPROG
 #include "userprog/process.h"
