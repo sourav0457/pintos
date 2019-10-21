@@ -346,6 +346,7 @@ thread_tid (void)
   return thread_current ()->tid;
 }
 
+// Compares the wake_up_ticks values of 2 threads. If wake_up_ticks value of thread A < wake_up_ticks value of thread B, returns True, else False
 static bool
 ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
             void *aux UNUSED) 
@@ -356,6 +357,7 @@ ordered_tick_asc (const struct list_elem *a_, const struct list_elem *b_,
   return a->wake_up_ticks < b->wake_up_ticks;
 }
 
+// Compares the priorities of 2 threads. If priority of thread A > priority of thread B, returns True, else False
 static bool
 ordered_priority_dsc (const struct list_elem *a_, const struct list_elem *b_,
                   void *aux UNUSED)
@@ -374,14 +376,15 @@ void thread_sleep(int64_t ticks) {
 
   // Initialising the list of sleeping threads
   // list_init(ordered_sleep_list);
-    enum intr_level old_level;
+  enum intr_level old_level;
   // Creating a pointer to point to the current thread
   struct thread *current_thread = thread_current();
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
-    old_level = intr_disable();
+  old_level = intr_disable();
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
+  // Using the ordered_tick_asc comparator function
   list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
 
   // Using sema-down to block the running thread
@@ -391,15 +394,20 @@ void thread_sleep(int64_t ticks) {
 }
 
 void thread_wakeup() {
-    enum intr_level old_level;
+  enum intr_level old_level;
+  // While loop - to check if the wake_up_tick condition matches with multiple threads in the ordered list
   while(!list_empty(&ordered_sleep_list)){
+    // Taking the first element from the ordered list
     struct list_elem *front = list_front (&ordered_sleep_list);
+    // Getting the pointer to the thread object using the list_elem object(thread_elem)
     struct thread * t = list_entry(front, struct thread, thread_elem);
+    // Wake up the thread if it's wake_up_ticks value is less than or equal to the current ticks
     if(t->wake_up_ticks <= timer_ticks()) {
         old_level = intr_disable();
         thread_unblock(t);
         //sema_up(&t->thread_sema_value);
-      list_pop_front(&ordered_sleep_list);
+        // Remove the first thread from the ordered list
+        list_pop_front(&ordered_sleep_list);
         intr_set_level(old_level);
     }
     else
@@ -441,8 +449,8 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread) {
 //      list_push_back(&ready_list, &cur->elem);
-// changing for priority preempt as it has to come in an ordered way
-      list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
+    // Ordering list based on priority with the first element having the highest priority
+    list_insert_ordered(&ready_list, &cur->elem, ordered_priority_dsc, NULL);
   }
   cur->status = THREAD_READY;
   schedule ();
@@ -511,6 +519,7 @@ thread_get_priority (void)
 void
 thread_set_nice (int nice /*UNUSED*/) 
 {
+  //Checking if the nice values are within the given limits
   if (nice >= -20 && nice <= 20) {
     struct thread *current_thread = thread_current();
     current_thread->nice = nice;
@@ -520,6 +529,7 @@ thread_set_nice (int nice /*UNUSED*/)
         struct thread *t = list_entry(front,
         struct thread, elem);
         if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
+            // Yielding the current thread in case priority of thread t > priority of current thread
             thread_yield();
         }
     }
@@ -690,6 +700,8 @@ init_thread (struct thread *t, const char *name, int priority)
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
+
+  // Initialising values of nice and recent_cpu for thread t
   if (thread_mlfqs) {
     t-> nice = 0;
     t -> recent_cpu = int_to_fp(0);

@@ -99,7 +99,7 @@ struct thread
     struct list_elem allelem;           /* List element for all threads list. */
     struct semaphore thread_sema_value; /* The semphore value of the thread */
     int wake_up_ticks;                  /* Number of ticks for which the current thread will sleep */
-    struct list_elem thread_elem;
+    struct list_elem thread_elem;       /* Defining the list_elem object to create an ordered list of threads - ordered_sleep_list*/
     //Deep--
     int nice;
     int recent_cpu;
