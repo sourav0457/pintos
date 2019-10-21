@@ -420,7 +420,7 @@ bool semaCompare(const struct list_elem *elem_one, const struct list_elem *elem_
   list_sort (&sema_a -> semaphore.waiters, compareElements, NULL);
   list_sort (&sema_b -> semaphore.waiters, compareElements, NULL);
   
-  struct list_elem *front_a = list_front(&sema_a->semaphore.waiters);
+  struct list_elem *front_a = list_front(&sema_a->semaphore.waiters); 
   struct list_elem *front_b = list_front(&sema_b->semaphore.waiters);
 
   struct thread *thread_a = list_entry(front_a, struct thread, elem);

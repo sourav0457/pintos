@@ -5,9 +5,6 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-// Deep--
-#include "fixed-point.h"
-// --Deep
 
 /* States in a thread's life cycle. */
 enum thread_status

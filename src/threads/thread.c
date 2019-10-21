@@ -377,12 +377,12 @@ void thread_sleep(int64_t ticks) {
   // Initialising the list of sleeping threads
   // list_init(ordered_sleep_list);
   enum intr_level old_level;
+  old_level = intr_disable();
   // Creating a pointer to point to the current thread
   struct thread *current_thread = thread_current();
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
-  old_level = intr_disable();
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
   // Using the ordered_tick_asc comparator function
   list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
@@ -492,6 +492,8 @@ thread_set_priority (int new_priority)
 }
 
 void thread_set_priority_donation(struct thread * t, int newPriority){
+    enum intr_level old_level;
+    old_level = intr_disable();
     t->priority = newPriority;
     t->is_donated = true;
     if(t->status == THREAD_READY){
@@ -506,6 +508,7 @@ void thread_set_priority_donation(struct thread * t, int newPriority){
             }
         }
     }
+    intr_set_level(old_level);
 }
 
 /* Returns the current thread's priority. */
