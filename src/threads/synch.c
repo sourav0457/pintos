@@ -411,14 +411,17 @@ struct thread* find_thread_with_max_priority(struct list *list){
   struct list_elem * e;
   struct thread *v = NULL;
   int max_priority = 0;
+  struct list_elem *elem_to_remove;
   for (e = list_begin (&list); e != list_end (&list); e = list_next (e))
   {
       struct thread *temp = list_entry (e, struct thread, elem);
       if(temp -> priority > max_priority){
         v = temp;
         max_priority = temp -> priority;
+        elem_to_remove = e;
       }
   }
+  list_remove(elem_to_remove);
   return v;
 }
 
