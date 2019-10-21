@@ -374,12 +374,12 @@ void thread_sleep(int64_t ticks) {
   // Initialising the list of sleeping threads
   // list_init(ordered_sleep_list);
     enum intr_level old_level;
-  // Creating a pointer to point to the current thread
+    old_level = intr_disable();
+    // Creating a pointer to point to the current thread
   struct thread *current_thread = thread_current();
 
   // Calculating the total time for which the thread will sleep and then adding it to `wake_up_ticks` in struct thread
   current_thread -> wake_up_ticks = timer_ticks() + ticks;
-    old_level = intr_disable();
   // Adding the thread to the list of sleeping threads i.e. ordered_sleep_list
   list_insert_ordered(&ordered_sleep_list, &current_thread->thread_elem, ordered_tick_asc, NULL);
 
