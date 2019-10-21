@@ -407,40 +407,25 @@ bool compareElements(const struct list_elem *one, const struct list_elem *two, v
     return t1->priority > t2->priority;
 }
 
-struct thread* find_thread_with_max_priority(struct list *list){
-  struct list_elem * e;
-  struct thread *v = NULL;
-  int max_priority = 0;
-  struct list_elem *elem_to_remove;
-  for (e = list_begin (&list); e != list_end (&list); e = list_next (e))
-  {
-      struct thread *temp = list_entry (e, struct thread, elem);
-      if(temp -> priority > max_priority){
-        v = temp;
-        max_priority = temp -> priority;
-        elem_to_remove = e;
-      }
-  }
-  list_remove(elem_to_remove);
-  return v;
-}
 
-bool semaCompare(const struct list_elem *one, const struct list_elem *two, void *aux UNUSED)
+bool semaCompare(const struct list_elem *elem_one, const struct list_elem *elem_two, void *aux UNUSED)
 {
-  struct semaphore_elem *s1 = list_entry(one, struct semaphore_elem, elem);
-  struct semaphore_elem *s2 = list_entry(two, struct semaphore_elem, elem);
-  if (list_empty(&s2 -> semaphore.waiters)) 
+  struct semaphore_elem *sema_a = list_entry(elem_one, struct semaphore_elem, elem);
+  struct semaphore_elem *sema_b = list_entry(elem_two, struct semaphore_elem, elem);
+  if (list_empty(&sema_b -> semaphore.waiters)) 
     return true;
-  if (list_empty(&s1 -> semaphore.waiters)) 
+  if (list_empty(&sema_a -> semaphore.waiters)) 
     return false;
-  struct thread *t1 = find_thread_with_max_priority(&s1 -> semaphore.waiters);
-  struct thread *t2 = find_thread_with_max_priority(&s2 -> semaphore.waiters);
-  // list_sort (&s1 -> semaphore.waiters, compareElements, NULL);
-  // list_sort (&s2 -> semaphore.waiters, compareElements, NULL);
-  if(t1 -> priority > t2 -> priority)
-    return true;
-  return false;
-  // return compareElements(list_front(&s1->semaphore.waiters), list_front(&s2->semaphore.waiters), NULL);
+
+  list_sort (&sema_a -> semaphore.waiters, compareElements, NULL);
+  list_sort (&sema_b -> semaphore.waiters, compareElements, NULL);
+  
+  struct list_elem *front_a = list_front(&sema_a->semaphore.waiters);
+  struct list_elem *front_b = list_front(&sema_b->semaphore.waiters);
+
+  struct thread *thread_a = list_entry(front_a, struct thread, elem);
+  struct thread *thread_b = list_entry(front_b, struct thread, elem);
+  return thread_a -> priority > thread_b -> priority;
 }
 
 bool compareLock(const struct list_elem *one, const struct list_elem *two, void *aux UNUSED){
