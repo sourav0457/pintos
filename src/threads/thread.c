@@ -487,17 +487,24 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+//  printf("New Priority: %d, Original priority: %d", new_priority, thread_current()->original_priority);
+//  thread_current ()->priority = new_priority;
+//  thread_current ()->original_priority = new_priority;   // change for priority donation
+//    if(!list_empty(&ready_list)) {
+//        struct list_elem *front = list_front(&ready_list);
+//        struct thread *t = list_entry(front,
+//        struct thread, elem);
+//        if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
+//            thread_yield();
+//        }
+//    }
 
-  thread_current ()->priority = new_priority;
-  thread_current ()->original_priority = new_priority;   // change for priority donation
-    if(!list_empty(&ready_list)) {
-        struct list_elem *front = list_front(&ready_list);
-        struct thread *t = list_entry(front,
-        struct thread, elem);
-        if(t!= NULL && t->tid != 2 && t->priority > thread_current()->priority){
-            thread_yield();
-        }
-    }
+    thread_set_priority_donation(thread_current(), new_priority, false);
+
+
+
+
+
 //  struct list_elem *front = list_front (&ready_list);
 //  struct thread * t = list_entry(front, struct thread, elem);
 //  struct thread *current_thread = thread_current ();
@@ -516,26 +523,53 @@ thread_set_priority (int new_priority)
 //  }
 }
 
-void thread_set_priority_donation(struct thread * t, int newPriority){
+void thread_set_priority_donation(struct thread * t, int newPriority, bool is_donated){
     struct thread * curr = thread_current();
 //    t->original_priority = t->priority;
 //    enum intr_level old_level;
 //    old_level = intr_disable();
-    t->priority = newPriority;
-    t->is_donated = true;
-    if(t->status == THREAD_READY){
-        list_remove(&t->elem);
-        list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
-        if(!list_empty(&ready_list)) {
-            struct list_elem *front = list_front(&ready_list);
-            struct thread *p = list_entry(front,
-            struct thread, elem);
-            if(p!= NULL && p->tid != 2 && p->priority > thread_current()->priority){
-                thread_yield();
-            }
+//    t->priority = newPriority;
+//    t->is_donated = true;
+//    if(t->status == THREAD_READY) {
+////        list_remove(&t->elem);
+////        list_insert_ordered(&ready_list, &t->elem, ordered_priority_dsc, NULL);
+//        list_sort(&ready_list, ordered_priority_dsc, NULL);
+//    }
+//     else if(!list_empty(&ready_list)&& t->status == THREAD_RUNNING) {
+//            struct list_elem *front = list_front(&ready_list);
+//            struct thread *p = list_entry(front,
+//            struct thread, elem);
+//            if(p!= NULL && p->tid != 2 && p->priority > thread_current()->priority){
+//                thread_yield();
+//            }
+//        }
+
+//    intr_set_level(old_level);
+
+
+
+    enum intr_level old_level;
+    old_level = intr_disable();
+    if(!is_donated){
+        if(curr->is_donated &&  curr->priority > newPriority){
+            curr->original_priority = newPriority;
+        }
+        else{
+            curr->priority = curr->original_priority = newPriority;
         }
     }
-//    intr_set_level(old_level);
+    else{
+        curr->priority = newPriority;
+        curr->is_donated = true;
+    }
+    if(curr->status == THREAD_READY){
+        list_sort(&ready_list, ordered_priority_dsc, NULL);
+    }
+    else if(curr->status == THREAD_RUNNING &&
+    list_entry (list_begin (&ready_list), struct thread,elem)->priority > curr->priority){
+        thread_yield();
+    }
+    intr_set_level(old_level);
 }
 
 /* Returns the current thread's priority. */

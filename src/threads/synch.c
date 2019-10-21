@@ -230,13 +230,27 @@ lock_acquire (struct lock *lock)
   old_level = intr_disable();
   struct thread * curr = thread_current();
   struct thread * holder;
+  struct lock * dummy;
   if(lock->holder !=NULL){
       curr->blocked_by_lock = lock;
   }
+  int i =0;
   holder = lock->holder;
   if(!thread_mlfqs){
-      if(holder != NULL && holder->priority < curr->priority){
-          thread_set_priority_donation(holder,curr->priority);
+      while(holder != NULL && holder->priority < curr->priority){
+          thread_set_priority_donation(holder,curr->priority, true);
+          if(dummy->max_priority<curr->priority){
+              dummy->max_priority = curr->priority;
+          }
+          if(holder->blocked_by_lock !=NULL && i<8){
+              dummy = holder->blocked_by_lock;
+              holder = holder->blocked_by_lock->holder;
+              i++;
+          }
+          else{
+              break;
+          }
+
       }
   }
   sema_down (&lock->semaphore);
@@ -288,7 +302,20 @@ lock_release (struct lock *lock)
       list_remove(&lock->lock_elem);
       lock->max_priority = -1;
       if(list_empty(&curr->acquired_locks)){
+          curr->is_donated = false;
           thread_set_priority(curr->original_priority);
+      }
+      else{
+          struct list_elem *front = list_front(&curr->acquired_locks);
+          struct lock *t = list_entry(front,
+          struct lock, lock_elem);
+          if(t->max_priority != -1) {
+              thread_set_priority_donation(curr, t->max_priority, true);
+          }
+          else{
+              thread_set_priority(curr->original_priority);
+          }
+
       }
   }
   intr_set_level(old_level);
