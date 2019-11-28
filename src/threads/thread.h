@@ -102,7 +102,7 @@ struct thread
     struct list_elem child_elem;
     struct semaphore being_waited_on;
     int exit_status;
-    /* End of changes
+    /* End of changes*/
 #endif
 
     /* Owned by thread.c. */
