@@ -464,6 +464,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+  list_init(&t -> child_process_list);
+  sema_init(&t -> being_waited_on, 0);
+  t -> exit_status = -1;
+  
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
