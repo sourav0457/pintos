@@ -97,9 +97,9 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     
-    /* Changes for process_wait
+    /* Changes for process_wait*/
     struct list child_process_list;
-    struct list_elem child _elem;
+    struct list_elem child_elem;
     struct semaphore being_waited_on;
     int exit_status;
     /* End of changes
