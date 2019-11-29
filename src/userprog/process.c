@@ -45,6 +45,9 @@ process_execute (const char *file_name)
   file_copy = malloc(strlen(file_name)+1);
   strlcpy(file_copy,file_name,strlen(file_name)+1);
   file_copy = strtok_r(file_copy," ",&a);
+  if(file_copy == NULL){
+      return -1;
+  }
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
