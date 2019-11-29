@@ -471,11 +471,11 @@ setup_stack (void **esp, char* file_name)
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        palloc_free_page (kpage);
-    }
+      if (success) {
+        *esp = PHYS_BASE-12;
+      //else
+        //palloc_free_page (kpage);
+    //}
 
     /* adding arguments in stack top-down */
 
@@ -529,7 +529,12 @@ setup_stack (void **esp, char* file_name)
     *esp -= 4;
     (*(int *)*esp) = 0;  
 
-    //free (argpointers);  
+    //free (argpointers);
+    }
+
+    else
+        palloc_free_page (kpage);
+    }  
 
   return success;
 }
