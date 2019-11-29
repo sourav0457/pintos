@@ -42,15 +42,15 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
-  file_copy = malloc(strlen(file_name)+1);
-  strlcpy(file_copy,file_name,strlen(file_name)+1);
-  file_copy = strtok_r(file_copy," ",&a);
+//  file_copy = malloc(strlen(file_name)+1);
+//  strlcpy(file_copy,file_name,strlen(file_name)+1);
+  file_copy = strtok_r((char *)file_name," ",&a);
   if(file_copy == NULL){
       return -1;
   }
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR) {
       palloc_free_page(fn_copy);
       return tid;
@@ -257,10 +257,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  file = filesys_open (file_name);
+  char *a;
+  char * file_p;
+  file_p = strtok_r((char *)file_name," ",&a);
+  file = filesys_open (file_p);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", file_p);
       goto done; 
     }
 
@@ -490,6 +493,7 @@ setup_stack (void **esp, const char* file_name)
     for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
     {
       argv[argc] = token;
+      printf(" value being stored are %c  ", *argv[argc]);
       argc++;
     }
 
