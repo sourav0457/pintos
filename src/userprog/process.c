@@ -196,7 +196,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp, int argc, char* file_name);
+static bool setup_stack (void **esp, char* file_name);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -307,7 +307,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Set up stack. */
   char* argv = parsefile(file_name);
   int argc = sizeof(argv)/sizeof(argv[0]);
-  if (!setup_stack (esp, argc, file_name))
+  if (!setup_stack (esp, file_name))
     goto done;
 
   /* Start address. */
@@ -432,7 +432,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, int argc, char* file_name) 
+setup_stack (void **esp, char* file_name) 
 {
   uint8_t *kpage;
   bool success = false;
@@ -448,7 +448,20 @@ setup_stack (void **esp, int argc, char* file_name)
     }
 
     /* adding arguments in stack top-down */
-    char* argv = parsefile(file_name);
+
+    char* token, *save_ptr;
+    //char* argvalues[50];
+    char* argv[50];
+    int argc = 0;
+
+    for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
+    {
+      argv[argc] = token;
+      argc++;
+    }
+
+
+    //char* argv = parsefile(file_name);
     int* argpointers = calloc(argc, sizeof(int));
 
     for (int i = argc-1; i>=0; i++)
@@ -484,7 +497,7 @@ setup_stack (void **esp, int argc, char* file_name)
 }
 
 /* function for tokenizing file name */
-static char* parsefile (char* file_name)
+/*static char* parsefile (char* file_name)
 {
   char* token, *save_ptr;
   char* argvalues[50];
@@ -497,7 +510,7 @@ static char* parsefile (char* file_name)
   }
 
   return argvalues;
-}
+}*/
 
 /* Adds a mapping from user virtual address UPAGE to kernel
    virtual address KPAGE to the page table.
