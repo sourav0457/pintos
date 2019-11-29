@@ -231,7 +231,7 @@ static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
-static char* parsefile (char* file_name);
+//static char* parsefile (char* file_name);
 
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
@@ -492,36 +492,44 @@ setup_stack (void **esp, char* file_name)
 
 
     //char* argv = parsefile(file_name);
-    int* argpointers = calloc(argc, sizeof(int));
+    //int* argpointers = calloc(argc, sizeof(int));
+    uint32_t * argpointers[argc];
 
     for (int i = argc-1; i>=0; i++)
     {
       *esp -= strlen(argv[i]+1);
       memcpy(*esp, argv[i], strlen(argv[i])+1);
-      argpointers[i] = *esp;
+      argpointers[i] = (uint32_t *)*esp;
     }
 
-    *esp -= sizeof(int);
+    //*esp -= sizeof(int);
+    *esp -= 4;
     (*(int *)*esp) = 0;
 
     for (int i = argc-1; i>=0; i++)
     {
-      *esp -= sizeof(int);
-      memcpy(*esp, argpointers[i], sizeof(int));
+      //*esp -= sizeof(int);
+      *esp -= 4;
+      //memcpy(*esp, argpointers[i], sizeof(int));
+      (*(uint32_t **)(*esp)) = argpointers[i];
     }
 
-    int argvpt = *esp;
-    *esp -= sizeof(int);
-    //*esp = (*(int *)*esp);
-    memcpy(*esp, &argvpt, sizeof(int));
+    //int argvpt = *esp;
+    //*esp -= sizeof(int);
+    ////*esp = (*(int *)*esp);
+    //memcpy(*esp, &argvpt, sizeof(int));
 
-    *esp -= sizeof(int);
+    (*(uintptr_t **)(*esp)) = *esp + 4;
+
+    //*esp -= sizeof(int);
+    *esp -= 4;
     (*(int *)*esp) = argc;
 
-    *esp -= sizeof(int);
+    //*esp -= sizeof(int);
+    *esp -= 4;
     (*(int *)*esp) = 0;  
 
-    free (argpointers);  
+    //free (argpointers);  
 
   return success;
 }
