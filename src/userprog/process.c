@@ -44,7 +44,7 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
   file_copy = malloc(strlen(file_name)+1);
   strlcpy(file_copy,file_name,strlen(file_name)+1);
-  file_copy = strtok_r(file_copy," ",a);
+  file_copy = strtok_r(file_copy," ",&a);
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
@@ -53,9 +53,9 @@ process_execute (const char *file_name)
       return tid;
   }
   requriedTid = tid;
-  enum intr_level = old_level = intr_disable();
+  enum intr_level  old_level = intr_disable();
   thread_foreach(*funcforfind,NULL);
-  list_push_front(&thread_current()->child_process_list, &matching_thread->child_elem);
+  list_push_front(&thread_current()->child_process_list, &childThread->child_elem);
   intr_set_level(old_level);
   return tid;
 }
