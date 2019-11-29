@@ -335,8 +335,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
 
   /* Set up stack. */
-  char* argv = parsefile(file_name);
-  int argc = sizeof(argv)/sizeof(argv[0]);
+  //char* argv = parsefile(file_name);
+  //int argc = sizeof(argv)/sizeof(argv[0]);
   if (!setup_stack (esp, file_name))
     goto done;
 
