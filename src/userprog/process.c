@@ -497,8 +497,8 @@ setup_stack (void **esp, char* file_name)
 
     for (int i = argc-1; i>=0; i++)
     {
-      *esp -= strlen(argv[i]+1);
-      memcpy(*esp, argv[i], strlen(argv[i])+1);
+      *esp -= sizeof(char)*strlen(argv[i]+1);
+      memcpy(*esp, argv[i], sizeof(char)*strlen(argv[i])+1);
       argpointers[i] = (uint32_t *)*esp;
     }
 
