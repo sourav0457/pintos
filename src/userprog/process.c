@@ -257,13 +257,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  char *a;
-  char * file_p;
-  file_p = strtok_r((char *)file_name," ",&a);
-  file = filesys_open (file_p);
+  char *token, *save_ptr;
+  token = strtok_r((char *)file_name," ",&save_ptr);
+  file = filesys_open (token);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_p);
+      printf ("load: %s: open failed\n", token);
       goto done; 
     }
 
@@ -477,69 +476,60 @@ setup_stack (void **esp, const char* file_name)
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success) {
-        *esp = PHYS_BASE-12;
-      //else
-        //palloc_free_page (kpage);
-    //}
+      if (success) 
+      {
+        *esp = PHYS_BASE;
 
-    /* adding arguments in stack top-down */
+        char* token, *save_ptr;
+        char* argv[50];
+        int argc = 0;
 
-    char* token, *save_ptr;
-    //char* argvalues[50];
-    char* argv[50];
-    int argc = 0;
+        for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
+        {
+          argv[argc] = token;
+          //printf(" value being stored are %c  ", *argv[argc]);
+          argc++;
+        }
 
-    for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
-    {
-      argv[argc] = token;
-      printf(" value being stored are %c  ", *argv[argc]);
-      argc++;
-    }
+        uint32_t * argpointers[argc];
 
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp = *esp - sizeof(char)*(strlen(argv[i])+1);
+          memcpy(*esp, argv[i], sizeof(char)*(strlen(argv[i])+1));
+          argpointers[i] = (uint32_t *)*esp;
+        }
 
-    //char* argv = parsefile(file_name);
-    //int* argpointers = calloc(argc, sizeof(int));
-    uint32_t * argpointers[argc];
+        /* Null sentinel */
+        *esp -= 4;
+        (*(int *)*esp) = 0;
 
-    for (int i = argc-1; i>=0; i++)
-    {
-      *esp = *esp - (sizeof(char))*(strlen(argv[i])+1);
-      memcpy(*esp, argv[i], (sizeof(char))*(strlen(argv[i])+1));
-      argpointers[i] = (uint32_t *)*esp;
-    }
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp -= 4;
+          (*(uint32_t **)(*esp)) = argpointers[i];
+        }
 
-    //*esp -= sizeof(int);
-    *esp -= 4;
-    (*(int *)*esp) = 0;
+        //int argvpt = *esp;
+        //*esp -= sizeof(int);
+        ////*esp = (*(int *)*esp);
+        //memcpy(*esp, &argvpt, sizeof(int));
 
-    for (int i = argc-1; i>=0; i++)
-    {
-      //*esp -= sizeof(int);
-      *esp -= 4;
-      //memcpy(*esp, argpointers[i], sizeof(int));
-      (*(uint32_t **)(*esp)) = argpointers[i];
-    }
+        *esp -= 4;
+        *(uintptr_t **)(*esp) = *esp + 4;
 
-    //int argvpt = *esp;
-    //*esp -= sizeof(int);
-    ////*esp = (*(int *)*esp);
-    //memcpy(*esp, &argvpt, sizeof(int));
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = argc;
 
-    (*(uintptr_t **)(*esp)) = *esp + 4;
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = 0;  
 
-    //*esp -= sizeof(int);
-    *esp -= 4;
-    (*(int *)*esp) = argc;
+        //free (argpointers);
+      }
 
-    //*esp -= sizeof(int);
-    *esp -= 4;
-    (*(int *)*esp) = 0;  
-
-    //free (argpointers);
-    }
-
-    else
+      else
         palloc_free_page (kpage);
     }  
 
