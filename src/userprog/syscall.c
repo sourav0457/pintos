@@ -23,6 +23,6 @@ void sys_exit (struct intr_frame *f)
 {
   int status;
   status = *((int*)f->esp+1);
-  exit (status);
+  //exit (status);
 }
 
