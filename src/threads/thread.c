@@ -281,7 +281,7 @@ void
 thread_exit (void) 
 {
   ASSERT (!intr_context ());
-  sema_up(&thread_current ()->being_waited_on);
+    sema_up(&thread_current ()->being_waited_on);
 
 #ifdef USERPROG
   process_exit ();

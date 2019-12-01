@@ -93,12 +93,12 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-    struct semaphore being_waited_on;
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     
     /* Changes for process_wait*/
+    struct semaphore being_waited_on;
     struct list child_process_list;
     struct list_elem child_elem;
     int exit_status;
