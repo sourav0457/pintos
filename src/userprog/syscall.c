@@ -200,7 +200,7 @@ void check_buffer (void *buff_to_check, unsigned size)
   char *ptr  = (char * )buff_to_check;
   for (i = 0; i < size; i++)
     {
-      check_valid_addr((const void *) ptr);
+      is_valid_add((const void *) ptr);
       ptr++;
     }
 }
@@ -212,7 +212,7 @@ void get_stack_arguments (struct intr_frame *f, int *args, int num_of_args)
   for (i = 0; i < num_of_args; i++)
     {
       ptr = (int *) f->esp + i + 1;
-      check_valid_addr((const void *) ptr);
+      is_valid_add((const void *) ptr);
       args[i] = *ptr;
     }
 }
