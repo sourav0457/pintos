@@ -30,6 +30,19 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
+  int * p = f->esp;
+  is_valid_add(p);
+  int t = *p++;
+  switch(t){
+      case SYS_HALT:
+          break;
+      case SYS_EXIT:
+           break;
+      case SYS_WAIT:
+          break;
+      default:
+          break;
+  }
   printf ("system call!\n");
   thread_exit ();
 }
@@ -37,6 +50,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 void exit (int exit_status)
 {
     thread_current()->exit_status = exit_status;
-//    printf("%s: exit(%d)\n", thread_current()->name, status);
+    printf("%s: exit(%d)\n", thread_current()->name, exit_status);
     thread_exit ();
 }

@@ -51,6 +51,7 @@ process_execute (const char *file_name)
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
+//  free(file_copy);
   if (tid == TID_ERROR) {
       palloc_free_page(fn_copy);
       return tid;
@@ -58,6 +59,7 @@ process_execute (const char *file_name)
   requriedTid = tid;
   enum intr_level  old_level = intr_disable();
   thread_foreach(*funcforfind,NULL);
+//  sema_down(&thread_current()->being_waited_on);
   list_push_front(&thread_current()->child_process_list, &childThread->child_elem);
   intr_set_level(old_level);
   return tid;
