@@ -535,7 +535,7 @@ setup_stack (void **esp, const char *file_name)
         /* Null sentinel */
         *esp -= 4;
         (*(int *)*esp) = 0;
-
+        
         for (int i = argc-1; i>=0; i--)
         {
           *esp -= 4;
@@ -547,7 +547,7 @@ setup_stack (void **esp, const char *file_name)
         ////*esp = (*(int *)*esp);
         //memcpy(*esp, &argvpt, sizeof(int));
 
-        *esp -= 4;
+        //*esp -= 4;
         *(uintptr_t **)(*esp) = *esp + 4;
 
         //*esp -= sizeof(int);
