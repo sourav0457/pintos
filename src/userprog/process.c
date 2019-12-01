@@ -289,30 +289,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
-  /* For use in the string tokenizer below... */
   char *token, *save_ptr;
-  /* List of all command line arguments. 25 is a somewhat arbitrary limit,
-     informed by the 128 byte pintos command line limit. */
-  char *argv[25];
-  /* The number of arguments passed in on the command line (includes the program name),
-     so argc will always be at least 1. */
-  int argc = 0;
-
-  /* Tokenize the command line string with a " " (space) as a delimeter. */
-  for(token = strtok_r((char *)file_name, " ", &save_ptr); token != NULL;
-    token = strtok_r(NULL, " ", &save_ptr))
-  {
-    /* Add token to the array of command line arguments. */
-    argv[argc] = token;
-    argc++; /* Increment the number of args */
-  }
-
-  /* Open executable file. Pass only the program name. */
-  file = filesys_open (argv[0]);
+  token = strtok_r((char *)file_name," ",&save_ptr);
+  file = filesys_open (token);
   if (file == NULL)
     {
       /* Pass only the program name. */
-      printf ("load: %s: open failed\n", argv[0]);
+      printf ("load: %s: open failed\n", token);
       goto done;
     }
 
@@ -390,7 +373,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. Pass in the number of command line arguments, and the list of arguments themselves. */
-  if (!setup_stack (esp, argc, argv))
+  if (!setup_stack (esp, file_name))
     goto done;
 
   /* Start address. */
@@ -516,65 +499,72 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, int argc, char *argv[])
+setup_stack (void **esp, const char *file_name)
 {
   uint8_t *kpage;
   bool success = false;
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-  if (kpage != NULL)
+  if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
+      if (success) 
       {
-        /* Stack initialization code insipired by the work of pindexis
-        (the full GitHub link of which is available in Design2.txt).
-        Mainly used to determine correct pointer types. */
+        *esp = PHYS_BASE;
 
-        /* Offset PHYS_BASE as instructed. */
-        *esp = PHYS_BASE - 12;
-        /* A list of addresses to the values that are intially added to the stack.  */
-        uint32_t * arg_value_pointers[argc];
+        char* token, *save_ptr;
+        char* argv[50];
+        int argc = 0;
 
-        /* First add all of the command line arguments in descending order, including
-           the program name. */
-        for(int i = argc-1; i >= 0; i--)
+        for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
         {
-          /* Allocate enough space for the entire string (plus and extra byte for
-             '/0'). Copy the string to the stack, and add its reference to the array
-              of pointers. */
+          argv[argc] = token;
+          //printf(" value being stored are %c  ", *argv[argc]);
+          argc++;
+        }
+
+        uint32_t * argpointers[argc];
+
+        for (int i = argc-1; i>=0; i--)
+        {
           *esp = *esp - sizeof(char)*(strlen(argv[i])+1);
           memcpy(*esp, argv[i], sizeof(char)*(strlen(argv[i])+1));
-          arg_value_pointers[i] = (uint32_t *)*esp;
+          argpointers[i] = (uint32_t *)*esp;
         }
-        /* Allocate space for & add the null sentinel. */
-        *esp = *esp - 4;
-        (*(int *)(*esp)) = 0;
 
-        /* Push onto the stack each char* in arg_value_pointers[] (each of which
-           references an argument that was previously added to the stack). */
-        *esp = *esp - 4;
-        for(int i = argc-1; i >= 0; i--)
+        /* Null sentinel */
+        *esp -= 4;
+        (*(int *)*esp) = 0;
+
+        for (int i = argc-1; i>=0; i--)
         {
-          (*(uint32_t **)(*esp)) = arg_value_pointers[i];
-          *esp = *esp - 4;
+          *esp -= 4;
+          (*(uint32_t **)(*esp)) = argpointers[i];
         }
 
-        /* Push onto the stack a pointer to the pointer of the address of the
-           first argument in the list of arguments. */
-        (*(uintptr_t **)(*esp)) = *esp + 4;
+        //int argvpt = *esp;
+        //*esp -= sizeof(int);
+        ////*esp = (*(int *)*esp);
+        //memcpy(*esp, &argvpt, sizeof(int));
 
-        /* Push onto the stack the number of program arguments. */
-        *esp = *esp - 4;
-        *(int *)(*esp) = argc;
+        *esp -= 4;
+        *(uintptr_t **)(*esp) = *esp + 4;
 
-        /* Push onto the stack a fake return address, which completes stack initialization. */
-        *esp = *esp - 4;
-        (*(int *)(*esp)) = 0;
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = argc;
+
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = 0;  
+
+        //free (argpointers);
       }
+
       else
         palloc_free_page (kpage);
-    }
+    }  
+
   return success;
 }
 
