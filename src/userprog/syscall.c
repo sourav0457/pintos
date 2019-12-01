@@ -39,7 +39,8 @@ syscall_handler (struct intr_frame *f UNUSED)
       case SYS_HALT:
           break;
       case SYS_EXIT:
-           break;
+          sys_exit(f);
+          break;
       case SYS_WAIT:
           break;
       default:
