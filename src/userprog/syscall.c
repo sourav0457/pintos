@@ -23,6 +23,14 @@ void sys_exit (struct intr_frame *f)
 {
   int status;
   status = *((int*)f->esp+1);
-  //exit (status);
+  pro_exit (status);
+}
+
+void pro_exit (int status)
+{
+	struct thread *current_thread = thread_current();
+  current_thread->exit_status = status;
+	printf("%s: exit(%d)\n", current_thread->name, status);
+  thread_exit ();
 }
 
