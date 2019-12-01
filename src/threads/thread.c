@@ -172,6 +172,10 @@ thread_create (const char *name, int priority,
   struct switch_threads_frame *sf;
   tid_t tid;
 
+  /* Changes */
+  enum intr_level old_level;
+  /* Changes */
+
   ASSERT (function != NULL);
 
   /* Allocate thread. */
@@ -182,6 +186,10 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+
+  /* Changes */
+  old_level = intr_disable ();
+  /* Changes */
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -197,6 +205,10 @@ thread_create (const char *name, int priority,
   sf = alloc_frame (t, sizeof *sf);
   sf->eip = switch_entry;
   sf->ebp = 0;
+
+  /* Changes */
+  intr_set_level (old_level);
+  /* Changes */
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -466,6 +478,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   list_init(&t -> child_process_list);
+  list_init(&t->file_descriptors);
+  t->cur_fd = 2;
   sema_init(&t -> being_waited_on, 0);
   t -> exit_status = -1;
   
