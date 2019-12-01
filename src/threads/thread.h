@@ -101,6 +101,7 @@ struct thread
     /* Changes for process_wait*/
     struct list child_process_list;
     struct list_elem child_elem;
+    struct list file_descriptors;
     int exit_status;
     /* End of changes*/
 #endif

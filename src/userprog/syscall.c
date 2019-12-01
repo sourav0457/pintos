@@ -12,6 +12,7 @@
 
 static void syscall_handler (struct intr_frame *);
 static void exit(int exit_status);
+static int read(int fd, void *buffer, unsigned length);
 struct file_descriptor_mapper{
     struct list_elem elem_file;
     struct file * address;
@@ -64,8 +65,41 @@ syscall_handler (struct intr_frame *f UNUSED)
       f->eax = filesys_create((const char *) args[0], (unsigned) args[1]);
       lock_release(&file_lock);
       break;
+    case SYS_READ:
+      get_stack_arguments(f, &args[0], 3);
+      check_buffer((void *)args[1], args[2]);
+      phys_page_ptr=pagedir_get_page(thread_current()->pagedir, (const void *) args[1]);
+      if(phys_page_ptr == NULL)
+        exit(-1);
+      args[1] = (int) phys_page_ptr;
+      f->eax = read(args[0], (void *) args[1], (unsigned) args[2]);
+      
+      break;
   }
   thread_exit ();
+}
+
+int read(int fd, void *buffer, unsigned length) {
+  struct list_elem *temp;
+  lock_acquire(&file_lock);
+  if(fd == 0){
+    lock_release(&file_lock);
+    return (int) input_getc();
+  }
+  if(fd==1 || list_empty(&thread_current()->file_descriptors)){
+    lock_release(&file_lock);
+    return 0;
+  }
+  for(temp=list_front(&thread_current()->file_descriptors); temp!= NULL; temp = temp-> next){
+    struct file_descriptor_mapper *t = list_entry (temp, struct file_descriptor_mapper, elem_file);
+    if(t->file_descriptor == fd){
+      lock_release(&file_lock);
+      int bytes = (int) file_read(t->address, buffer, length);
+      return bytes;
+    }
+  }
+  lock_release(&file_lock);
+  return -1;
 }
 
 void exit (int exit_status)
