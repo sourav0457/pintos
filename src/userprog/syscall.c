@@ -35,6 +35,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   int * p = f->esp;
   is_valid_add(p);
   int t = *p++;
+  printf("Value of t: %d", t);
   switch(t){
       case SYS_HALT:
           break;
