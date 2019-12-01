@@ -22,8 +22,6 @@ static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
 
-static tid_t requriedTid;
-static struct thread * childThread;
 static void funcforfind (struct thread *t, void * aux);
 
 /* A function to be passed to the thread_foreach() function to find a thread based on tid. */
@@ -65,11 +63,11 @@ process_execute (const char *file_name)
       palloc_free_page(fn_copy);
       return tid;
   }
-  requriedTid = tid;
   enum intr_level  old_level = intr_disable();
-  thread_foreach(*funcforfind,NULL);
+//  thread_foreach(*funcforfind,NULL);
 //  sema_down(&thread_current()->being_waited_on);
-  list_push_front(&thread_current()->child_process_list, &childThread->child_elem);
+  struct thread * p = thread_child_find(tid);
+  list_push_front(&thread_current()->child_process_list, &p->child_elem);
   intr_set_level(old_level);
   return tid;
 }
@@ -595,10 +593,4 @@ install_page (void *upage, void *kpage, bool writable)
      address, then map our page there. */
   return (pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
-}
-
-static void funcforfind(struct thread *t, void * aux UNUSED){
-    if(requriedTid == t->tid){
-        childThread = t;
-    }
 }
