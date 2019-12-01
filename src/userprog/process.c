@@ -282,6 +282,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
+  char *file_copy = malloc(strlen(file_name)+1);
+  strlcpy(file_copy,file_name,strlen(file_name)+1);
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -373,7 +375,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. Pass in the number of command line arguments, and the list of arguments themselves. */
-  if (!setup_stack (esp, file_name))
+  if (!setup_stack (esp, file_copy))
     goto done;
 
   /* Start address. */
