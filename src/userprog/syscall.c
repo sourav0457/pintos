@@ -5,6 +5,10 @@
 #include "threads/thread.h"
 
 static void syscall_handler (struct intr_frame *);
+void is_valid_add(const void * ptr)
+void sys_exit (struct intr_frame *f)
+void exit (int exit_status)
+
 struct file_descriptor_mapper{
     struct list_elem elem_file;
     struct file * address;
@@ -49,10 +53,10 @@ void sys_exit (struct intr_frame *f)
 
   int status;
   status = *((int*)f->esp+1);
-  pro_exit (status);
+  exit (status);
 }
 
-void pro_exit (int exit_status)
+void exit (int exit_status)
 {
 	struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
