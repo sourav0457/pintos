@@ -5,9 +5,9 @@
 #include "threads/thread.h"
 
 static void syscall_handler (struct intr_frame *);
-void is_valid_add(const void * ptr)
-void sys_exit (struct intr_frame *f)
-void exit (int exit_status)
+void is_valid_add(const void * ptr);
+void sys_exit (struct intr_frame *f);
+void exit (int exit_status);
 
 struct file_descriptor_mapper{
     struct list_elem elem_file;
