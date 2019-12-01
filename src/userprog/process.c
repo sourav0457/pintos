@@ -21,6 +21,11 @@
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
+
+static tid_t requriedTid;
+static struct thread * childThread;
+static void funcforfind (struct thread *t, void * aux);
+
 /* A function to be passed to the thread_foreach() function to find a thread based on tid. */
 static void find_tid (struct thread *t, void * aux);
 /* A global variable - the thread that we are looking for in the thread list (NULL if not found). */
@@ -37,41 +42,35 @@ process_execute (const char *file_name)
 {
   char *fn_copy;
   tid_t tid;
+  char * a;
+  char * file_copy;
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE); /* Makes a copy of the entire command line string, args included. */
-
-  /* Create a new string that contains soley the program name. */
-  char * save_ptr;
-  char * name = strtok_r((char *)file_name, " ", &save_ptr);
-
-  /* Ensure that we weren't passed a NULL command line string (all spaces, for examples). */
-  if (name == NULL)
-  {
-    return -1;
+  strlcpy (fn_copy, file_name, PGSIZE);
+//  file_copy = malloc(strlen(file_name)+1);
+//  strlcpy(file_copy,file_name,strlen(file_name)+1);
+  file_copy = strtok_r((char *)file_name," ",&a);
+  if(file_copy == NULL){
+      return -1;
   }
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (name, PRI_DEFAULT, start_process, fn_copy);
-
-  /* If we're unable to create the thread, then free its pages and exit. */
-  if (tid == TID_ERROR)
-  {
-    palloc_free_page (fn_copy);
+  tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
+//  free(file_copy);
+  if (tid == TID_ERROR) {
+      palloc_free_page(fn_copy);
+      return tid;
   }
-  else
-  {
-    /* If the thread created is a valid thread, then we must disable interupts, and add it to this threads list of child threads. */
-    current_tid = tid;
-    enum intr_level old_level = intr_disable ();
-    thread_foreach(*find_tid, NULL);
-    list_push_front(&thread_current()->child_process_list, &matching_thread->child_elem);
-    intr_set_level (old_level);
-  }
+  requriedTid = tid;
+  enum intr_level  old_level = intr_disable();
+  thread_foreach(*funcforfind,NULL);
+//  sema_down(&thread_current()->being_waited_on);
+  list_push_front(&thread_current()->child_process_list, &childThread->child_elem);
+  intr_set_level(old_level);
   return tid;
 }
 
@@ -598,14 +597,8 @@ install_page (void *upage, void *kpage, bool writable)
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
 
-
-
-/* This function is passed to thread_foreach in order to find the thread
-   that matches a specific tid. */
-static void find_tid (struct thread *t, void * aux UNUSED)
-{
-  if(current_tid == t->tid)
-  {
-    matching_thread = t;
-  }
+static void funcforfind(struct thread *t, void * aux UNUSED){
+    if(requriedTid == t->tid){
+        childThread = t;
+    }
 }
