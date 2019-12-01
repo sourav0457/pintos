@@ -1,9 +1,24 @@
-#include "userprog/syscall.h"
+/*#include "userprog/syscall.h"
 #include <stdio.h>
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/vaddr.h"*/
+
+#include "userprog/syscall.h"
+#include <stdio.h>
+#include <string.h>
+#include <syscall-nr.h>
+#include "threads/interrupt.h"
+#include "threads/thread.h"
+#include "threads/synch.h"
+#include "devices/shutdown.h"
+#include "devices/input.h"
 #include "threads/vaddr.h"
+#include "userprog/process.h"
+#include "userprog/pagedir.h"
+#include "filesys/filesys.h"
+#include "filesys/file.h"
 
 static void syscall_handler (struct intr_frame *);
 void is_valid_add(const void * ptr);
