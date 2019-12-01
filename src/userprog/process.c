@@ -536,10 +536,12 @@ setup_stack (void **esp, const char *file_name)
         *esp -= 4;
         (*(int *)*esp) = 0;
         
+        *esp -= 4;
         for (int i = argc-1; i>=0; i--)
         {
-          *esp -= 4;
+          
           (*(uint32_t **)(*esp)) = argpointers[i];
+          *esp -= 4;
         }
 
         //int argvpt = *esp;
