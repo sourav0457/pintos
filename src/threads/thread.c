@@ -466,6 +466,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   list_init(&t -> child_process_list);
+  list_init(&t->file_descriptors);
+  t->cur_fd = 2;
   sema_init(&t -> being_waited_on, 0);
   t -> exit_status = -1;
   

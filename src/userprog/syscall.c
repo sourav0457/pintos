@@ -13,6 +13,11 @@
 static void syscall_handler (struct intr_frame *);
 static void exit(int exit_status);
 static int read(int fd, void *buffer, unsigned length);
+static void get_stack_arguments (struct intr_frame *f, int *args, int num_of_args);
+static void check_buffer (void *buff_to_check, unsigned size);
+static void is_valid_add(const void * ptr);
+static int write (int fd, const void *buffer, unsigned length);
+static int open (const char *file);
 struct file_descriptor_mapper{
     struct list_elem elem_file;
     struct file * address;
@@ -75,6 +80,27 @@ syscall_handler (struct intr_frame *f UNUSED)
       f->eax = read(args[0], (void *) args[1], (unsigned) args[2]);
       
       break;
+    case SYS_WRITE:
+        get_stack_arguments(f, &args[0], 3);
+        check_buffer((void *)args[1], args[2]);
+        phys_page_ptr = pagedir_get_page(thread_current()->pagedir, (const void *) args[1]);
+        if (phys_page_ptr == NULL)
+        {
+          exit(-1);
+        }
+        args[1] = (int) phys_page_ptr;
+        f->eax = write(args[0], (const void *) args[1], (unsigned) args[2]);
+        break;
+    case SYS_OPEN:
+        get_stack_arguments(f, &args[0], 1);
+        phys_page_ptr = pagedir_get_page(thread_current()->pagedir, (const void *) args[0]);
+        if (phys_page_ptr == NULL)
+        {
+          exit(-1);
+        }
+        args[0] = (int) phys_page_ptr;
+        f->eax = open((const char *) args[0]);
+				break;
   }
   thread_exit ();
 }
@@ -100,6 +126,66 @@ int read(int fd, void *buffer, unsigned length) {
   }
   lock_release(&file_lock);
   return -1;
+}
+
+int write (int fd, const void *buffer, unsigned length)
+{
+  /* list element to iterate the list of file descriptors. */
+  struct list_elem *temp;
+
+  lock_acquire(&file_lock);
+
+  /* If fd is equal to one, then we write to STDOUT (the console, usually). */
+	if(fd == 1)
+	{
+		putbuf(buffer, length);
+    lock_release(&file_lock);
+    return length;
+	}
+  /* If the user passes STDIN or no files are present, then return 0. */
+  if (fd == 0 || list_empty(&thread_current()->file_descriptors))
+  {
+    lock_release(&file_lock);
+    return 0;
+  }
+
+  /* Check to see if the given fd is open and owned by the current process. If so, return
+     the number of bytes that were written to the file. */
+  for (temp = list_front(&thread_current()->file_descriptors); temp != NULL; temp = temp->next)
+  {
+      struct file_descriptor_mapper *t = list_entry (temp, struct file_descriptor_mapper, elem_file);
+      if (t->file_descriptor == fd)
+      {
+        int bytes_written = (int) file_write(t->address, buffer, length);
+        lock_release(&file_lock);
+        return bytes_written;
+      }
+  }
+
+  lock_release(&file_lock);
+
+  /* If we can't write to the file, return 0. */
+  return 0;
+}
+
+int open (const char *file)
+{
+  lock_acquire(&file_lock);
+
+  struct file* f = filesys_open(file);
+  if(f == NULL)
+  {
+    lock_release(&file_lock);
+    return -1;
+  }
+  struct file_descriptor_mapper *new_file = malloc(sizeof(struct file_descriptor_mapper));
+  new_file->address = f;
+  int fd = thread_current ()->cur_fd;
+  thread_current ()->cur_fd++;
+  new_file->file_descriptor = fd;
+  list_push_front(&thread_current ()->file_descriptors, &new_file->elem_file);
+  lock_release(&file_lock);
+  return fd;
 }
 
 void exit (int exit_status)

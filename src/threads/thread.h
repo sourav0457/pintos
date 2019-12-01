@@ -103,6 +103,7 @@ struct thread
     struct list_elem child_elem;
     struct list file_descriptors;
     int exit_status;
+    int cur_fd; 
     /* End of changes*/
 #endif
 
