@@ -164,10 +164,10 @@ process_exit (void)
         exit_proc(-1);
     int exit_code = cur->exit_error;
     printf("%s: exit(%d)\n",cur->name,exit_code);
-    acquire_file_lock();
+    acquire_filesys_lock();
     file_close(thread_current()->self);
     close_all_files(&thread_current()->files);
-    release_file_lock();
+    release_filesys_lock();
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -289,7 +289,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   char *fn = malloc (strlen(file_name)+1);
   strlcpy(fn, file_name, strlen(file_name)+1);
 
-  acquire_file_lock();
+  acquire_filesys_lock();
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -399,7 +399,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
  done:
   /* We arrive here whether the load is successful or not. */
   /* My changes */
-  release_file_lock();
+  release_filesys_lock();
 
   return success;
 }
