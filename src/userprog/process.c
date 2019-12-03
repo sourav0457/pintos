@@ -583,7 +583,7 @@ setup_stack (void **esp, char * file_name)
     }
 
 
-    /* my token */
+    /* my token 
     char *token, *save_ptr;
     int argc = 0,i;
     char * copy = malloc(strlen(file_name)+1);
@@ -621,7 +621,7 @@ setup_stack (void **esp, char * file_name)
     *esp-=sizeof(int);
     memcpy(*esp,&zero,sizeof(int));
     free(copy);
-    free(argv);
+    free(argv); */
   return success;
 }
 
