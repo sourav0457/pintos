@@ -374,7 +374,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
-  /* Set up stack. Pass in the number of command line arguments, and the list of arguments themselves. */
   if (!setup_stack (esp, file_copy))
     goto done;
 
@@ -385,13 +384,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
 
-   /* Of the load was successful, then we must ensure that it is not writen to.
-      Writing to open executables has unpredictable results. Otherwise, close the file.  */
-   if (success)
-     file_deny_write(file);
-   else
-     file_close (file);
-   return success; /* In either case, return whether or not the executable was loaded correctly.  */
+  /* We arrive here whether the load is successful or not. */
+  if (success)
+    file_deny_write(file);
+  else
+    file_close (file);
+  return success;
 }
 
 /* load() helpers. */
@@ -545,11 +543,7 @@ setup_stack (void **esp, const char *file_name)
 
         int argvpt = *esp;
         *esp -= sizeof(int);
-        //*esp = (*(int *)*esp);
         memcpy(*esp, &argvpt, sizeof(int));
-
-        //*esp -= sizeof(int);
-        //*(uintptr_t **)(*esp) = *esp + 4;
 
         *esp -= sizeof(int);
         (*(int *)*esp) = argc;
