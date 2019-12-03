@@ -553,8 +553,8 @@ setup_stack (void **esp, const char *file_name)
         *esp -= 4;
         *(uintptr_t **)(*esp) = *esp + 4;
 
-        //*esp -= sizeof(int);
-        *esp -= 4;
+        *esp -= sizeof(int);
+        //*esp -= 4;
         (*(int *)*esp) = argc;
 
         //*esp -= sizeof(int);
