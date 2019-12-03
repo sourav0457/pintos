@@ -21,6 +21,10 @@
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
+/*My changes*/
+extern struct list all_list;
+/*My changes*/
+
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
@@ -31,6 +35,10 @@ process_execute (const char *file_name)
   char *fn_copy;
   tid_t tid;
 
+  /*My changes*/
+  char *f_name;
+  /*My changes*/
+
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
@@ -38,10 +46,22 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  /*My changes*/
+  char *save_ptr;
+  f_name = malloc(strlen(file_name)+1);
+  strlcpy(f_name, file_name, strlen(file_name)+1);
+  f_name = strtok_r(f_name, " ", &save_ptr);
+  /*My changes*/
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (f_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+  
+  /*My changes*/
+  sema_down()
+  /*My changes*/
+
   return tid;
 }
 
