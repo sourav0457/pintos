@@ -1,6 +1,7 @@
 #ifndef THREADS_THREAD_H
 #define THREADS_THREAD_H
-
+#include <kernel/list.h>
+#include <threads/synch.h>
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
@@ -88,7 +89,20 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-    struct list_elem allelem;           /* List element for all threads list. */
+    struct list_elem allelem;
+    /* List element for all threads list. */
+
+    int64_t waketick;
+    bool success;
+ /* my code */
+    int exit_error;
+    struct list child_proc;
+    struct thread* parent;
+    struct file *self;
+    struct list files;
+    int fd_count;
+    struct semaphore child_lock;
+    int waitingon;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -101,6 +115,19 @@ struct thread
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
+
+/* my code */
+
+
+struct child {
+    int tid;
+    struct list_elem elem;
+    int exit_error;
+    bool used;
+};
+
+
+
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
@@ -132,6 +159,8 @@ void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
+
+bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux);
 
 int thread_get_nice (void);
 void thread_set_nice (int);

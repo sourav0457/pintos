@@ -24,9 +24,15 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+/*my change */
+struct lock filesys_lock;
+
+
+
+
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
-static struct list all_list;
+struct list all_list;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -92,6 +98,9 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+
+  /* my change */
+  lock_init(&filesys_lock);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -171,7 +180,6 @@ thread_create (const char *name, int priority,
   struct switch_entry_frame *ef;
   struct switch_threads_frame *sf;
   tid_t tid;
-
   ASSERT (function != NULL);
 
   /* Allocate thread. */
@@ -182,6 +190,21 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+  /*my code */
+    enum intr_level old_level;
+    struct child* c = malloc(sizeof(*c));
+    c->tid = tid;
+    c->exit_error = t->exit_error;
+    c->used = false;
+    list_push_back (&running_thread()->child_proc, &c->elem);
+    /* Prepare thread for first run by initializing its stack.
+       Do this atomically so intermediate values for the 'stack'
+       member cannot be observed. */
+    old_level = intr_disable ();
+
+
+
+
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -197,6 +220,9 @@ thread_create (const char *name, int priority,
   sf = alloc_frame (t, sizeof *sf);
   sf->eip = switch_entry;
   sf->ebp = 0;
+
+
+    intr_set_level (old_level);
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -289,7 +315,19 @@ thread_exit (void)
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
-  intr_disable ();
+
+
+
+
+  /* my code */
+
+
+    while(!list_empty(&thread_current()->child_proc)){
+        struct proc_file *f = list_entry (list_pop_front(&thread_current()->child_proc), struct child, elem);
+        free(f);
+    }
+
+    intr_disable ();
   list_remove (&thread_current()->allelem);
   thread_current ()->status = THREAD_DYING;
   schedule ();
@@ -451,7 +489,7 @@ is_thread (struct thread *t)
 static void
 init_thread (struct thread *t, const char *name, int priority)
 {
-  enum intr_level old_level;
+//  enum intr_level old_level;
 
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
@@ -464,9 +502,17 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
-  old_level = intr_disable ();
+//  old_level = intr_disable ();
+    list_init (&t->child_proc);
+    t->parent = running_thread();
+    list_init (&t->files);
+    t->fd_count=2;
+    t->exit_error = -100;
+    sema_init(&t->child_lock,0);
+    t->waitingon=0;
+    t->self=NULL;
   list_push_back (&all_list, &t->allelem);
-  intr_set_level (old_level);
+//  intr_set_level (old_level);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -582,3 +628,24 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+
+
+/* my code */
+void acquire_filesys_lock()
+{
+    lock_acquire(&filesys_lock);
+}
+void release_filesys_lock()
+{
+    lock_release(&filesys_lock);
+}
+
+
+
+bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux)
+{
+    struct thread *fthread = list_entry (first, struct thread, elem);
+    struct thread *sthread = list_entry (second, struct thread, elem);
+    return fthread->waketick < sthread->waketick;
+}
