@@ -529,7 +529,7 @@ setup_stack (void **esp, char * file_name)
   if (kpage != NULL)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
+      if (success) {
         *esp = PHYS_BASE;
 
         /*My changes*/
@@ -577,10 +577,10 @@ setup_stack (void **esp, char * file_name)
         //*esp -= sizeof(int);
         *esp -= 4;
         (*(int *)*esp) = 0;
-
+      }
       else
         palloc_free_page (kpage);
-    }
+  }
 
 
     /* my token 
