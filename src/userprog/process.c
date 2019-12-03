@@ -529,7 +529,7 @@ setup_stack (void **esp, const char *file_name)
 
         for (int i = argc-1; i>=0; i--)
         {
-          *esp = *esp - sizeof(char)*(strlen(argv[i])+1);
+          *esp -= sizeof(char)*(strlen(argv[i])+1);
           memcpy(*esp, argv[i], sizeof(char)*(strlen(argv[i])+1));
           argpointers[i] = (uint32_t *)*esp;
         }
@@ -538,12 +538,11 @@ setup_stack (void **esp, const char *file_name)
         *esp -= 4;
         (*(int *)*esp) = 0;
         
-        *esp -= 4;
+        //*esp -= 4;
         for (int i = argc-1; i>=0; i--)
         {
-          
-          (*(uint32_t **)(*esp)) = argpointers[i];
           *esp -= 4;
+          (*(uint32_t **)(*esp)) = argpointers[i];
         }
 
         //int argvpt = *esp;
@@ -551,7 +550,7 @@ setup_stack (void **esp, const char *file_name)
         ////*esp = (*(int *)*esp);
         //memcpy(*esp, &argvpt, sizeof(int));
 
-        //*esp -= 4;
+        *esp -= 4;
         *(uintptr_t **)(*esp) = *esp + 4;
 
         //*esp -= sizeof(int);
@@ -562,7 +561,7 @@ setup_stack (void **esp, const char *file_name)
         *esp -= 4;
         (*(int *)*esp) = 0;  
 
-        //free (argpointers);
+        free (argpointers);
       }
 
       else
