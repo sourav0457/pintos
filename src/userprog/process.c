@@ -298,19 +298,21 @@ load (const char *file_name, void (**eip) (void), void **esp)
     char * fn_c = malloc (strlen(file_name)+1);
     strlcpy(fn_c, file_name, strlen(file_name)+1);
 
-    char * fn_cp = malloc (strlen(file_name)+1);
-    strlcpy(fn_cp, file_name, strlen(file_name)+1);
+    char *token, *save_ptr;
 
-    char * save_ptr;
-    fn_cp = strtok_r(fn_cp," ",&save_ptr);
-    file = filesys_open (fn_cp);
-    free(fn_cp);
+    //char * fn_cp = malloc (strlen(file_name)+1);
+    //strlcpy(fn_cp, file_name, strlen(file_name)+1);
+
+    //char *save_ptr;
+    token = strtok_r((char *)file_name," ",&save_ptr);
+    file = filesys_open (token);
+    //free(fn_cp);
 
 
 
   if (file == NULL)
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", token);
       goto done;
     }
 
@@ -323,7 +325,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024)
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      printf ("load: %s: error loading executable\n", token);
       goto done;
     }
 
