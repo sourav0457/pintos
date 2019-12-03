@@ -561,7 +561,7 @@ setup_stack (void **esp, const char *file_name)
         *esp -= 4;
         (*(int *)*esp) = 0;  
 
-        free (argpointers);
+        //free (argpointers);
       }
 
       else
