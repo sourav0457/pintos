@@ -264,7 +264,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 /* my code */
-static bool setup_stack (void **esp, char * cmdline);
+static bool setup_stack (void **esp, const char * file_name);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -295,6 +295,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Open executable file. */
   /*my code */
+    char * fn_c = malloc (strlen(file_name)+1);
+    strlcpy(fn_c, file_name, strlen(file_name)+1);
+
     char * fn_cp = malloc (strlen(file_name)+1);
     strlcpy(fn_cp, file_name, strlen(file_name)+1);
 
@@ -386,7 +389,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Set up stack. */
 
   /* my code*/
-    if (!setup_stack (esp,file_name))
+    if (!setup_stack (esp,fn_c))
     goto done;
 
   /* Start address. */
@@ -517,7 +520,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
 /* my code */
 static bool
-setup_stack (void **esp, char * file_name)
+setup_stack (void **esp, const char * file_name)
 {
   uint8_t *kpage;
   bool success = false;
@@ -527,13 +530,62 @@ setup_stack (void **esp, char * file_name)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
+      {
         *esp = PHYS_BASE;
+
+        char* token, *save_ptr;
+        char* argv[50];
+        int argc = 0;
+
+        for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
+        {
+          argv[argc] = token;
+          //printf(" value being stored are %c  ", *argv[argc]);
+          argc++;
+        }
+
+        uint32_t * argpointers[argc];
+
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp = *esp - sizeof(char)*(strlen(argv[i])+1);
+          memcpy(*esp, argv[i], sizeof(char)*(strlen(argv[i])+1));
+          argpointers[i] = (uint32_t *)*esp;
+        }
+
+        /* Null sentinel */
+        *esp -= 4;
+        (*(int *)*esp) = 0;
+
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp -= 4;
+          (*(uint32_t **)(*esp)) = argpointers[i];
+        }
+
+        //int argvpt = *esp;
+        //*esp -= sizeof(int);
+        ////*esp = (*(int *)*esp);
+        //memcpy(*esp, &argvpt, sizeof(int));
+
+        *esp -= 4;
+        *(uintptr_t **)(*esp) = *esp + 4;
+
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = argc;
+
+        //*esp -= sizeof(int);
+        *esp -= 4;
+        (*(int *)*esp) = 0;
+
+      }
       else
         palloc_free_page (kpage);
     }
 
 
-    /* my token */
+    /* my token
     char *token, *save_ptr;
     int argc = 0,i;
     char * copy = malloc(strlen(file_name)+1);
@@ -571,7 +623,7 @@ setup_stack (void **esp, char * file_name)
     *esp-=sizeof(int);
     memcpy(*esp,&zero,sizeof(int));
     free(copy);
-    free(argv);
+    free(argv); */
   return success;
 }
 
