@@ -535,13 +535,15 @@ setup_stack (void **esp, const char *file_name)
         }
 
         /* Null sentinel */
-        *esp -= 4;
+        *esp -= sizeof(int);
+        //*esp -= 4;
         (*(int *)*esp) = 0;
         
         //*esp -= 4;
         for (int i = argc-1; i>=0; i--)
         {
-          *esp -= 4;
+          *esp -= sizeof(int);
+          //*esp -= 4;
           (*(uint32_t **)(*esp)) = argpointers[i];
         }
 
@@ -550,15 +552,16 @@ setup_stack (void **esp, const char *file_name)
         ////*esp = (*(int *)*esp);
         //memcpy(*esp, &argvpt, sizeof(int));
 
-        *esp -= 4;
+        *esp -= sizeof(int);
+        //*esp -= 4;
         *(uintptr_t **)(*esp) = *esp + 4;
 
         *esp -= sizeof(int);
         //*esp -= 4;
         (*(int *)*esp) = argc;
 
-        //*esp -= sizeof(int);
-        *esp -= 4;
+        *esp -= sizeof(int);
+        //*esp -= 4;
         (*(int *)*esp) = 0;  
 
         //free (argpointers);
