@@ -284,8 +284,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
+  char *fn = malloc (strlen(file_name)+1);
+  strlcpy(fn, file_name, strlen(file_name)+1);
 
-  acquire_filesys_lock();
+  acquire_file_lock();
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -294,22 +296,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  /*my code */
-    char * fn_c = malloc (strlen(file_name)+1);
-    strlcpy(fn_c, file_name, strlen(file_name)+1);
+  /* My changes */
+  char *token, *save_ptr;
+  token = strtok_r((char *)file_name, " ", &save_ptr);
 
-    char *token, *save_ptr;
-
-    //char * fn_cp = malloc (strlen(file_name)+1);
-    //strlcpy(fn_cp, file_name, strlen(file_name)+1);
-
-    //char *save_ptr;
-    token = strtok_r((char *)file_name," ",&save_ptr);
-    file = filesys_open (token);
-    //free(fn_cp);
-
-
-
+  file = filesys_open(token);
   if (file == NULL)
     {
       printf ("load: %s: open failed\n", token);
@@ -390,22 +381,24 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Set up stack. */
 
-  /* my code*/
-    if (!setup_stack (esp,fn_c))
+  /* My changes */
+    if (!setup_stack (esp, fn))
     goto done;
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
   success = true;
-    /* my code */
-    file_deny_write(file);
-    thread_current()->self = file;
+
+  /* My changes */
+  file_deny_write(file);
+  thread_current()->self = file;
 
  done:
   /* We arrive here whether the load is successful or not. */
-  /* my code*/
-    release_filesys_lock();
+  /* My changes */
+  release_file_lock();
+
   return success;
 }
 
