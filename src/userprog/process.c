@@ -165,7 +165,7 @@ process_exit (void)
     int exit_code = cur->exit_error;
     printf("%s: exit(%d)\n",cur->name,exit_code);
     //acquire_filesys_lock();
-    //file_close(thread_current()->self);
+    file_close(thread_current()->self);
     close_all_files(&thread_current()->files);
     //release_filesys_lock();
 
