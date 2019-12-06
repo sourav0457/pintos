@@ -403,7 +403,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (success)
   {
     struct thread *current_thread;
+    current_thread = thread_current();
     current_thread->self = file;
+
     file_deny_write(file);
   }
   else
