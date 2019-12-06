@@ -241,14 +241,3 @@ void close_file(struct list *files, int fd){
     }
     free(f);
 }
-
-void close_all_files(struct list* files){
-    struct list_elem *e;
-    while(!list_empty(files)){
-        e = list_pop_front(files);
-        struct proc_file *f = list_entry(e, struct proc_file, elem);
-        file_close(f -> ptr);
-        list_remove(e);
-        free(f);
-    }
-}
