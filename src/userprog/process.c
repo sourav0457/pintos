@@ -289,7 +289,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   char *fname = malloc (strlen(file_name)+1);
   strlcpy(fname, file_name, strlen(file_name)+1);
 
-  acquire_filesys_lock();
+  //acquire_filesys_lock();
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -393,14 +393,25 @@ load (const char *file_name, void (**eip) (void), void **esp)
   success = true;
 
   /* My changes */
-  file_deny_write(file);
-  thread_current()->self = file;
+  //file_deny_write(file);
+  //thread_current()->self = file;
 
  done:
   /* We arrive here whether the load is successful or not. */
   /* My changes */
   //file_close (file);
-  release_filesys_lock();
+  if (success)
+  {
+    struct thread *current_thread;
+    current_thread->self = file;
+    file_deny_write(file);
+  }
+  else
+  {
+    file_close(file);
+  }
+  
+  //release_filesys_lock();
 
   return success;
 }
