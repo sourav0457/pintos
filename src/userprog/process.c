@@ -127,29 +127,33 @@ int
 process_wait (tid_t child_tid)
 {
     struct list_elem *e;
+    struct child *ch = NULL;
+    struct list_elem *e1 = NULL;
+    struct thread *curr_thread = thread_current();
 
-    struct child *ch=NULL;
-    struct list_elem *e1=NULL;
-    for (e = list_begin (&thread_current()->process_child); e != list_end (&thread_current()->process_child);
-         e = list_next (e))
-    {
-        struct child *f = list_entry (e, struct child, elem);
-        if(f->tid == child_tid)
-        {
-            ch = f;
-            e1 = e;
-        }
+    if(list_empty(&curr_thread->process_child))
+      return -1;
+
+    e = list_begin(&curr_thread->process_child);
+    while (e!= list_end(&curr_thread->process_child)) {
+      struct child *f = list_entry(e, struct child, elem);
+      if(f -> tid == child_tid){
+        ch = f;
+        e1 = e;
+        curr_thread -> being_waiting_on = ch -> tid;
+        break;
+      }
+      e = list_next(e);
     }
-    if(!ch || !e1)
-        return -1;
-    thread_current()->being_waiting_on = ch->tid;
-
+    
+    if (e == list_end(&curr_thread->process_child))
+      return -1;
+    int status = ch -> code_exit;
     if(!ch->is_done)
-        sema_down(&thread_current()->wait_for_child);
-    int temp = ch->code_exit;
+        sema_down(&curr_thread->wait_for_child);
     list_remove(e1);
 
-    return temp;
+    return ch -> code_exit;
 }
 
 /* Free the current process's resources. */

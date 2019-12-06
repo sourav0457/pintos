@@ -6,16 +6,10 @@
 #include "threads/vaddr.h"
 #include "list.h"
 #include "process.h"
-// #include "devices/shutdown.h"
-// #include "filesys/file.h"
-// #include "filesys/filesys.h"
 
 static void syscall_handler (struct intr_frame *);
 void* check_addr(const void*);
 struct proc_file* list_search(struct list* files, int fd);
-// static void exit_proc(int status);
-// static void close_file(struct list *files, int fd);
-// static void close_all_files(struct list* files);
 
 extern bool running;
 
