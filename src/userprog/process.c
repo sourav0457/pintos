@@ -159,17 +159,16 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-
-
-  /* my code */
-    //int code_exit = cur->code_exit;
-    //if(code_exit==-100)
-    //    exit_proc(-1);
-    printf("%s: exit(%d)\n",cur->name,cur->code_exit);
-    //acquire_filesys_lock();
-    file_close(thread_current()->file);
-    close_all_files(&thread_current()->open_files);
-    //release_filesys_lock();
+  printf("%s: exit(%d)\n",cur->name,cur->code_exit);
+  file_close(cur->file);
+  //close_all_files(&cur->open_files);
+  struct list_elem *e;
+    while(!list_empty(&cur->open_files)){
+        e = list_pop_front(&cur->open_files);
+        struct proc_file *f = list_entry(e, struct proc_file, elem);
+        file_close(f -> ptr);
+        list_remove(e);
+        free(f);
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
