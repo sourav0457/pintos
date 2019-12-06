@@ -61,6 +61,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             // Declaration: extern bool running??
             release_filesys_lock();
             break;
+            
         case SYS_REMOVE:
             check_addr(p+1);
             check_addr(*(p+1));
