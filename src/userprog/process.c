@@ -160,6 +160,7 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  struct proc_file *f = NULL;
 
   printf("%s: exit(%d)\n",cur->name,cur->code_exit);
   file_close(cur->file);
