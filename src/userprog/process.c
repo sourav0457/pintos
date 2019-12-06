@@ -80,6 +80,7 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
+  struct thread *par = thread_current()->parent;
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -87,18 +88,13 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-  thread_current()->parent->success = success;
+
+  par->success = success;
+  sema_up(&par->wait_for_child);
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
 
-  /*if (!success == true)
-    thread_current()->parent->success = false;
-  else
-    thread_current()->parent->success = true;
-*/
-  sema_up(&thread_current()->parent->wait_for_child);
-  
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
