@@ -13,17 +13,12 @@ struct proc_file* list_search(struct list* files, int fd);
 
 extern bool running;
 
-/*struct proc_file {
-    struct file* ptr;
-    int fd;
-    struct list_elem elem;
-};*/
-
 void
 syscall_init (void)
 {
     intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
+
 void is_valid_add(const void *vaddr){
     if(!is_user_vaddr(vaddr)){
         exit_proc(-1);
@@ -38,6 +33,7 @@ static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
     int *p = f -> esp;
+    int arg[3];
     is_valid_add(p);
     is_valid_add(p+1);
     int system_call = *p;
@@ -51,7 +47,8 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_EXEC:
-            is_valid_add(*(p+1));
+            arg[0] = *(int *) p+1;
+            is_valid_add((const void *) arg[0]);
             f->eax = exec_proc(*(p+1));
             break;
 
