@@ -21,8 +21,6 @@
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
-/* my code */
-extern struct list all_list;
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -34,7 +32,8 @@ process_execute (const char *file_name)
   char *fn_copy;
   tid_t tid;
   /*my code */
-    char *f_name;
+    char * a;
+    char * file_copy;
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
@@ -46,24 +45,25 @@ process_execute (const char *file_name)
   /* my code */
 
 
-    char *save_ptr;
-    f_name = malloc(strlen(file_name)+1);
-    strlcpy (f_name, file_name, strlen(file_name)+1);
-    f_name = strtok_r (f_name," ",&save_ptr);
+     file_copy = malloc(strlen(file_name)+1);
+    strlcpy( file_copy,file_name,strlen(file_name)+1);
+     file_copy = strtok_r (file_copy," ",&a);
+    if(file_copy == NULL){
+        return -1;
+    }
     /* Create a new thread to execute FILE_NAME. */
-    //printf("%d\n", thread_current()->tid);
-    tid = thread_create (f_name, PRI_DEFAULT, start_process, fn_copy);
-    free(f_name);
-    if (tid == TID_ERROR)
-        palloc_free_page (fn_copy);
+    tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
+    free(file_copy);
+    if (tid == TID_ERROR) {
+        palloc_free_page(fn_copy);
+        return tid;
+    }
 
 
   /* my code */
     sema_down(&thread_current()->child_lock);
     if(!thread_current()->success)
         return -1;
-
-
 
   return tid;
 }
@@ -76,7 +76,9 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
+  struct thread * parent_this_thread;
 
+  parent_this_thread = thread_current()->parent;
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -89,9 +91,9 @@ start_process (void *file_name_)
 
   /*my code */
 
-  if (!success){
-    thread_current()->parent->success=false;
-    sema_up(&thread_current()->parent->child_lock);
+  if (success == false){
+    parent_this_thread->success = false;
+    sema_up(&parent_this_thread->child_lock);
     thread_exit();
     }
     else{
@@ -122,8 +124,8 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid)
 {
-    //printf("Wait : %s %d\n",thread_current()->name, child_tid);
     struct list_elem *e;
+
     struct child *ch=NULL;
     struct list_elem *e1=NULL;
     for (e = list_begin (&thread_current()->child_proc); e != list_end (&thread_current()->child_proc);
