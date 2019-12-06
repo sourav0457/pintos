@@ -47,13 +47,14 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_EXEC:
-            arg[0] = *(int *) p+1;
+            arg[0] = *((int *) f->esp+1);
             is_valid_add((const void *) arg[0]);
             f->eax = exec_proc(*(p+1));
             break;
 
         case SYS_WAIT:
-            f->eax = process_wait(*(p+1));
+            arg[0] = *((int *) f->esp+1);
+            f->eax = process_wait(arg[0]);
             break;
 
         case SYS_CREATE:
