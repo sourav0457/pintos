@@ -286,8 +286,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
-  char *fn = malloc (strlen(file_name)+1);
-  strlcpy(fn, file_name, strlen(file_name)+1);
+  char *fname = malloc (strlen(file_name)+1);
+  strlcpy(fname, file_name, strlen(file_name)+1);
 
   acquire_filesys_lock();
 
@@ -384,7 +384,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Set up stack. */
 
   /* My changes */
-    if (!setup_stack (esp, fn))
+    if (!setup_stack (esp, fname))
     goto done;
 
   /* Start address. */
@@ -399,6 +399,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
  done:
   /* We arrive here whether the load is successful or not. */
   /* My changes */
+  file_close (file);
   release_filesys_lock();
 
   return success;
@@ -515,7 +516,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 
-/* my code */
+/* My changes */
 static bool
 setup_stack (void **esp, const char * file_name)
 {
@@ -537,7 +538,6 @@ setup_stack (void **esp, const char * file_name)
         for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
         {
           argv[argc] = token;
-          //printf(" value being stored are %c  ", *argv[argc]);
           argc++;
         }
 
@@ -560,67 +560,19 @@ setup_stack (void **esp, const char * file_name)
           (*(uint32_t **)(*esp)) = argpointers[i];
         }
 
-        //int argvpt = *esp;
-        //*esp -= sizeof(int);
-        ////*esp = (*(int *)*esp);
-        //memcpy(*esp, &argvpt, sizeof(int));
-
         *esp -= 4;
         *(uintptr_t **)(*esp) = *esp + 4;
 
-        //*esp -= sizeof(int);
         *esp -= 4;
         (*(int *)*esp) = argc;
 
-        //*esp -= sizeof(int);
         *esp -= 4;
         (*(int *)*esp) = 0;
-
       }
       else
         palloc_free_page (kpage);
     }
 
-
-    /* my token
-    char *token, *save_ptr;
-    int argc = 0,i;
-    char * copy = malloc(strlen(file_name)+1);
-    strlcpy (copy, file_name, strlen(file_name)+1);
-    for (token = strtok_r (copy, " ", &save_ptr); token != NULL;
-         token = strtok_r (NULL, " ", &save_ptr))
-        argc++;
-    int *argv = calloc(argc,sizeof(int));
-    for (token = strtok_r (file_name, " ", &save_ptr),i=0; token != NULL;
-         token = strtok_r (NULL, " ", &save_ptr),i++)
-    {
-        *esp -= strlen(token) + 1;
-        memcpy(*esp,token,strlen(token) + 1);
-        argv[i]=*esp;
-    }
-    while((int)*esp%4!=0)
-    {
-        *esp-=sizeof(char);
-        char x = 0;
-        memcpy(*esp,&x,sizeof(char));
-    }
-    int zero = 0;
-    *esp-=sizeof(int);
-    memcpy(*esp,&zero,sizeof(int));
-    for(i=argc-1;i>=0;i--)
-    {
-        *esp-=sizeof(int);
-        memcpy(*esp,&argv[i],sizeof(int));
-    }
-    int pt = *esp;
-    *esp-=sizeof(int);
-    memcpy(*esp,&pt,sizeof(int));
-    *esp-=sizeof(int);
-    memcpy(*esp,&argc,sizeof(int));
-    *esp-=sizeof(int);
-    memcpy(*esp,&zero,sizeof(int));
-    free(copy);
-    free(argv); */
   return success;
 }
 
