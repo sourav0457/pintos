@@ -640,13 +640,3 @@ void release_filesys_lock()
 {
     lock_release(&filesys_lock);
 }
-
-
-/*
-bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux)
-{
-    struct thread *fthread = list_entry (first, struct thread, elem);
-    struct thread *sthread = list_entry (second, struct thread, elem);
-    return fthread->waketick < sthread->waketick;
-}
-*/
