@@ -162,14 +162,14 @@ process_exit (void)
 
 
   /* my code */
-    int code_exit = cur->code_exit;
-    if(code_exit==-100)
-        exit_proc(-1);
-    printf("%s: exit(%d)\n",cur->name,code_exit);
-    acquire_filesys_lock();
+    //int code_exit = cur->code_exit;
+    //if(code_exit==-100)
+    //    exit_proc(-1);
+    printf("%s: exit(%d)\n",cur->name,cur->code_exit);
+    //acquire_filesys_lock();
     file_close(thread_current()->file);
     close_all_files(&thread_current()->open_files);
-    release_filesys_lock();
+    //release_filesys_lock();
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
