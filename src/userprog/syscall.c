@@ -11,7 +11,7 @@
 // #include "filesys/filesys.h"
 
 static void syscall_handler (struct intr_frame *);
-void* check_addr(const void*);
+void is_valid_add(const void*);
 struct proc_file* list_search(struct list* files, int fd);
 // static void exit_proc(int status);
 // static void close_file(struct list *files, int fd);
@@ -30,12 +30,22 @@ syscall_init (void)
 {
     intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
+void is_valid_add(const void *vaddr){
+    if(!is_user_vaddr(vaddr)){
+        exit_proc(-1);
+    }
+    void *p = pagedir_get_page(thread_current()->pagedir, vaddr);
+    if(!p){
+        exit_proc(-1);
+    }
+}
 
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
     int *p = f -> esp;
-    check_addr(p);
+    is_valid_add(p);
+    is_valid_add(p+1);
     int system_call = *p;
     switch(system_call){
         case SYS_HALT:
@@ -43,24 +53,20 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_EXIT:
-            check_addr(p+1);
             exit_proc(*(p+1));
             break;
 
         case SYS_EXEC:
-            check_addr(p+1);
-            check_addr(*(p+1));
+            is_valid_add(*(p+1));
             f->eax = exec_proc(*(p+1));
             break;
 
         case SYS_WAIT:
-            check_addr(p+1);
             f->eax = process_wait(*(p+1));
             break;
 
         case SYS_CREATE:
-            check_addr(p+5);
-            check_addr(*(p+4));
+            is_valid_add(*(p+4));
             // Declaration
             acquire_filesys_lock();
             f->eax = filesys_create(*(p+4), *(p+5));
@@ -68,8 +74,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             release_filesys_lock();
             break;
         case SYS_REMOVE:
-            check_addr(p+1);
-            check_addr(*(p+1));
+            is_valid_add(*(p+1));
             //Declaration
             acquire_filesys_lock();
             if(filesys_remove(*(p+1))==NULL)
@@ -81,8 +86,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_OPEN:
-            check_addr(p+1);
-            check_addr(*(p+1));
+            is_valid_add(*(p+1));
             // Declaration:
             acquire_filesys_lock();
 
@@ -103,7 +107,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_FILESIZE:
-            check_addr(p+1);
             // Declaration
             acquire_filesys_lock();
             f -> eax = file_length(list_search(&thread_current()->open_files, *(p+1))->ptr);
@@ -112,8 +115,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_READ:
-            check_addr(p+7);
-            check_addr(*(p+6));
+            is_valid_add(*(p+6));
             if(*(p+5)==0){
                 int i;
                 uint8_t* buffer = *(p+6);
@@ -138,8 +140,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_WRITE:
-            check_addr(p+7);
-            check_addr(*(p+6));
+            is_valid_add(*(p+6));
             if(*(p+5)==1){
                 putbuf(*(p+6), *(p+7));
                 f -> eax = *(p+7);
@@ -160,7 +161,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_SEEK:
-            check_addr(p+5);
             //Declaration
             acquire_filesys_lock();
             file_seek(list_search(&thread_current() -> open_files, *(p+4)) -> ptr, *(p+5));
@@ -169,7 +169,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_TELL:
-            check_addr(p+5);
             //Declaration
             acquire_filesys_lock();
             f -> eax = file_tell(list_search(&thread_current() -> open_files, *(p+1)) -> ptr);
@@ -178,7 +177,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_CLOSE:
-            check_addr(p+1);
             //Declaration
             acquire_filesys_lock();
             close_file(&thread_current()->open_files, *(p+1));
@@ -191,18 +189,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 }
 
-void* check_addr(const void *vaddr){
-    if(!is_user_vaddr(vaddr)){
-        exit_proc(-1);
-        return 0;
-    }
-    void *ptr = pagedir_get_page(thread_current()->pagedir, vaddr);
-    if(!ptr){
-        exit_proc(-1);
-        return 0;
-    }
-    return ptr;
-}
+
 
 struct proc_file* list_search(struct list* files, int fd){
     struct list_elem *e;
