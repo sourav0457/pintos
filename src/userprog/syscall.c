@@ -30,7 +30,7 @@ void* check_addr(const void *vaddr){
     exit_proc(-1);
     return 0;
   }
-  void *ptr = pagedir_get_page(thead_current()->pagedir, vaddr);
+  void *ptr = pagedir_get_page(thread_current()->pagedir, vaddr);
   if(!ptr){
     exit_proc(-1);
     return 0;
