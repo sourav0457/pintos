@@ -95,14 +95,15 @@ struct thread
     int64_t waketick;
     bool success;
  /* my code */
-    int exit_error;
-    struct list child_proc;
+    int being_waiting_on;
+    struct list process_child;
+    struct file * file;
+    struct list open_files;
+    int code_exit;
+//    struct wrapper_file * wrap_file;
     struct thread* parent;
-    struct file *self;
-    struct list files;
-    int fd_count;
-    struct semaphore child_lock;
-    int waitingon;
+    int count_file_descriptor;
+    struct semaphore wait_for_child;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -120,13 +121,16 @@ struct thread
 
 
 struct child {
+    bool is_done;
     int tid;
     struct list_elem elem;
-    int exit_error;
-    bool used;
+    int code_exit;
 };
 
-
+//struct wrapper_file{
+//    struct file * file;
+//    int exec;
+//};
 
 
 /* If false (default), use round-robin scheduler.

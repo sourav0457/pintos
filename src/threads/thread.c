@@ -194,9 +194,9 @@ thread_create (const char *name, int priority,
     enum intr_level old_level;
     struct child* c = malloc(sizeof(*c));
     c->tid = tid;
-    c->exit_error = t->exit_error;
-    c->used = false;
-    list_push_back (&running_thread()->child_proc, &c->elem);
+    c->code_exit = t->code_exit;
+    c->is_done = false;
+    list_push_back (&running_thread()->process_child, &c->elem);
     /* Prepare thread for first run by initializing its stack.
        Do this atomically so intermediate values for the 'stack'
        member cannot be observed. */
@@ -322,8 +322,8 @@ thread_exit (void)
   /* my code */
 
 
-    while(!list_empty(&thread_current()->child_proc)){
-        struct proc_file *f = list_entry (list_pop_front(&thread_current()->child_proc), struct child, elem);
+    while(!list_empty(&thread_current()->process_child)){
+        struct proc_file *f = list_entry (list_pop_front(&thread_current()->process_child), struct child, elem);
         free(f);
     }
 
@@ -503,17 +503,19 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
 //  old_level = intr_disable ();
-    list_init (&t->child_proc);
+    list_init (&t->process_child);
     t->parent = running_thread();
-    list_init (&t->files);
-    t->fd_count=2;
-    t->exit_error = -100;
-    sema_init(&t->child_lock,0);
-    t->waitingon=0;
-    t->self=NULL;
+    list_init (&t->open_files);
+    t->count_file_descriptor=2;
+    t->code_exit = -100;
+    sema_init(&t->wait_for_child,0);
+    t->being_waiting_on=0;
+    t->file=NULL;
+//    t->wrap_file->file = NULL;
   list_push_back (&all_list, &t->allelem);
 //  intr_set_level (old_level);
 }
+
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
    returns a pointer to the frame's base. */

@@ -63,7 +63,7 @@ process_execute (const char *file_name)
 
 
   /* my code */
-    sema_down(&thread_current()->child_lock);
+    sema_down(&thread_current()->wait_for_child);
     if(!thread_current()->success)
         return -1;
 
@@ -95,12 +95,12 @@ start_process (void *file_name_)
 
   if (success == false){
     parent_this_thread->success = false;
-    sema_up(&parent_this_thread->child_lock);
+    sema_up(&parent_this_thread->wait_for_child);
     thread_exit();
     }
     else{
         thread_current()->parent->success=true;
-        sema_up(&thread_current()->parent->child_lock);
+        sema_up(&thread_current()->parent->wait_for_child);
     }
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -130,7 +130,7 @@ process_wait (tid_t child_tid)
 
     struct child *ch=NULL;
     struct list_elem *e1=NULL;
-    for (e = list_begin (&thread_current()->child_proc); e != list_end (&thread_current()->child_proc);
+    for (e = list_begin (&thread_current()->process_child); e != list_end (&thread_current()->process_child);
          e = list_next (e))
     {
         struct child *f = list_entry (e, struct child, elem);
@@ -142,11 +142,11 @@ process_wait (tid_t child_tid)
     }
     if(!ch || !e1)
         return -1;
-    thread_current()->waitingon = ch->tid;
+    thread_current()->being_waiting_on = ch->tid;
 
-    if(!ch->used)
-        sema_down(&thread_current()->child_lock);
-    int temp = ch->exit_error;
+    if(!ch->is_done)
+        sema_down(&thread_current()->wait_for_child);
+    int temp = ch->code_exit;
     list_remove(e1);
 
     return temp;
@@ -162,13 +162,13 @@ process_exit (void)
 
 
   /* my code */
-    if(cur->exit_error==-100)
+    int code_exit = cur->code_exit;
+    if(code_exit==-100)
         exit_proc(-1);
-    int exit_code = cur->exit_error;
-    printf("%s: exit(%d)\n",cur->name,exit_code);
+    printf("%s: exit(%d)\n",cur->name,code_exit);
     acquire_filesys_lock();
-    file_close(thread_current()->self);
-    close_all_files(&thread_current()->files);
+    file_close(thread_current()->file);
+    close_all_files(&thread_current()->open_files);
     release_filesys_lock();
 
   /* Destroy the current process's page directory and switch back
@@ -398,7 +398,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   {
     struct thread *current_thread;
     current_thread = thread_current();
-    current_thread->self = file;
+    current_thread->file = file;
+//    current_thread->wrap_file->file = file;
     file_deny_write(file);
   }
   else

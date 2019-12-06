@@ -95,9 +95,9 @@ syscall_handler (struct intr_frame *f UNUSED)
             else{
                 struct proc_file *pfile = malloc(sizeof(*pfile));
                 pfile -> ptr = fptr;
-                pfile -> fd = thread_current() -> fd_count;
-                thread_current() -> fd_count++;
-                list_push_back(&thread_current()->files, &pfile->elem);
+                pfile -> fd = thread_current() -> count_file_descriptor;
+                thread_current() -> count_file_descriptor++;
+                list_push_back(&thread_current()->open_files, &pfile->elem);
                 f -> eax = pfile -> fd;
             }
             break;
@@ -106,7 +106,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             check_addr(p+1);
             // Declaration
             acquire_filesys_lock();
-            f -> eax = file_length(list_search(&thread_current()->files, *(p+1))->ptr);
+            f -> eax = file_length(list_search(&thread_current()->open_files, *(p+1))->ptr);
             // Declaration
             release_filesys_lock();
             break;
@@ -123,7 +123,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 }
             }
             else{
-                struct proc_file* fptr = list_search(&thread_current()->files, *(p+5));
+                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
                 if(fptr == NULL){
                     f->eax = -1;
                 }
@@ -145,7 +145,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 f -> eax = *(p+7);
             }
             else {
-                struct proc_file* fptr = list_search(&thread_current()->files, *(p+5));
+                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
                 if(fptr == NULL){
                     f -> eax = -1;
                 }
@@ -163,7 +163,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             check_addr(p+5);
             //Declaration
             acquire_filesys_lock();
-            file_seek(list_search(&thread_current() -> files, *(p+4)) -> ptr, *(p+5));
+            file_seek(list_search(&thread_current() -> open_files, *(p+4)) -> ptr, *(p+5));
             // Declaration
             release_filesys_lock();
             break;
@@ -172,7 +172,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             check_addr(p+5);
             //Declaration
             acquire_filesys_lock();
-            f -> eax = file_tell(list_search(&thread_current() -> files, *(p+1)) -> ptr);
+            f -> eax = file_tell(list_search(&thread_current() -> open_files, *(p+1)) -> ptr);
             // Declaration
             release_filesys_lock();
             break;
@@ -181,7 +181,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             check_addr(p+1);
             //Declaration
             acquire_filesys_lock();
-            close_file(&thread_current()->files, *(p+1));
+            close_file(&thread_current()->open_files, *(p+1));
             // Declaration
             release_filesys_lock();
             break;
@@ -233,16 +233,16 @@ int exec_proc(char * file_name) {
 
 void exit_proc(int status){
     struct list_elem *e;
-    for(e = list_begin(&thread_current()->parent->child_proc); e!= list_end(&thread_current()->parent->child_proc); e=list_next(e)){
+    for(e = list_begin(&thread_current()->parent->process_child); e!= list_end(&thread_current()->parent->process_child); e=list_next(e)){
         struct child *f = list_entry(e, struct child, elem);
         if(f->tid == thread_current()->tid){
-            f->used = true;
-            f-> exit_error = status;
+            f->is_done = true;
+            f-> code_exit = status;
         }
     }
-    thread_current()-> exit_error = status;
-    if(thread_current()->parent->waitingon == thread_current()->tid){
-        sema_up(&thread_current()->parent->child_lock);
+    thread_current()-> code_exit = status;
+    if(thread_current()->parent->being_waiting_on == thread_current()->tid){
+        sema_up(&thread_current()->parent->wait_for_child);
     }
     thread_exit();
 }
