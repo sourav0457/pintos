@@ -164,12 +164,14 @@ process_exit (void)
   file_close(cur->file);
   //close_all_files(&cur->open_files);
   struct list_elem *e;
-    while(!list_empty(&cur->open_files)){
-        e = list_pop_front(&cur->open_files);
-        struct proc_file *f = list_entry(e, struct proc_file, elem);
-        file_close(f -> ptr);
-        list_remove(e);
-        free(f);
+  while(!list_empty(&cur->open_files))
+  {
+    e = list_pop_front(&cur->open_files);
+    struct proc_file *f = list_entry(e, struct proc_file, elem);
+    file_close(f -> ptr);
+    list_remove(e);
+    free(f);
+  }
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
