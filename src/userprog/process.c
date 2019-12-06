@@ -80,9 +80,7 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-  struct thread * parent_this_thread;
 
-  parent_this_thread = thread_current()->parent;
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -95,15 +93,19 @@ start_process (void *file_name_)
 
   /*my code */
 
-  if (success == false){
-    parent_this_thread->success = false;
-    sema_up(&parent_this_thread->wait_for_child);
-    thread_exit();
-    }
-    else{
-        thread_current()->parent->success=true;
-        sema_up(&thread_current()->parent->wait_for_child);
-    }
+  if (!success == true)
+  {
+    thread_current()->parent->success = false;
+    //sema_up(&thread_current()->parent->wait_for_child);
+    //thread_exit();
+  }
+  else
+  {
+    thread_current()->parent->success = true;
+    //sema_up(&thread_current()->parent->wait_for_child);
+  }
+  sema_up(&thread_current()->parent->wait_for_child);
+  
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -160,12 +162,11 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-  //struct proc_file *f = NULL;
+  struct list_elem *e;
 
   printf("%s: exit(%d)\n",cur->name,cur->code_exit);
   file_close(cur->file);
-  //close_all_files(&cur->open_files);
-  struct list_elem *e;
+  
   while(!list_empty(&cur->open_files))
   {
     e = list_pop_front(&cur->open_files);
