@@ -17,6 +17,8 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include <devices/timer.h>
+#include <threads/malloc.h>
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -266,7 +268,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 /* my code */
-static bool setup_stack (void **esp, char * cmdline);
+static bool setup_stack (void **esp, const char * file_name);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -286,8 +288,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
-
-  acquire_filesys_lock();
+  char *fname = malloc (strlen(file_name)+1);
+  strlcpy(fname, file_name, strlen(file_name)+1);
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -296,20 +298,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  /*my code */
-    char * fn_cp = malloc (strlen(file_name)+1);
-    strlcpy(fn_cp, file_name, strlen(file_name)+1);
+  char *token, *save_ptr;
+  token = strtok_r((char *)file_name, " ", &save_ptr);
 
-    char * save_ptr;
-    fn_cp = strtok_r(fn_cp," ",&save_ptr);
-    file = filesys_open (fn_cp);
-    free(fn_cp);
-
-
-
+  file = filesys_open(token);
   if (file == NULL)
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", token);
       goto done;
     }
 
@@ -322,7 +317,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024)
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      printf ("load: %s: error loading executable\n", token);
       goto done;
     }
 
@@ -387,22 +382,30 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Set up stack. */
 
-  /* my code*/
-    if (!setup_stack (esp,file_name))
+  /* My changes */
+    if (!setup_stack (esp, fname))
     goto done;
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
   success = true;
-    /* my code */
-    file_deny_write(file);
-    thread_current()->self = file;
 
  done:
   /* We arrive here whether the load is successful or not. */
-  /* my code*/
-    release_filesys_lock();
+  /* My changes */
+  if (success)
+  {
+    struct thread *current_thread;
+    current_thread = thread_current();
+    current_thread->self = file;
+    file_deny_write(file);
+  }
+  else
+  {
+    file_close(file);
+  }
+
   return success;
 }
 
@@ -517,9 +520,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 
-/* my code */
+/* My changes */
 static bool
-setup_stack (void **esp, char * file_name)
+setup_stack (void **esp, const char * file_name)
 {
   uint8_t *kpage;
   bool success = false;
@@ -529,51 +532,51 @@ setup_stack (void **esp, char * file_name)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
+      {
         *esp = PHYS_BASE;
+
+        char* token, *save_ptr;
+        char* argv[50];
+        int argc = 0;
+
+        for (token = strtok_r((char*) file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr))
+        {
+          argv[argc] = token;
+          argc++;
+        }
+
+        uint32_t * argpointers[argc];
+
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp = *esp - sizeof(char)*(strlen(argv[i])+1);
+          memcpy(*esp, argv[i], sizeof(char)*(strlen(argv[i])+1));
+          argpointers[i] = (uint32_t *)*esp;
+        }
+
+        /* Null sentinel */
+        *esp -= 4;
+        (*(int *)*esp) = 0;
+
+        for (int i = argc-1; i>=0; i--)
+        {
+          *esp -= 4;
+          (*(uint32_t **)(*esp)) = argpointers[i];
+        }
+
+        *esp -= 4;
+        *(uintptr_t **)(*esp) = *esp + 4;
+
+        *esp -= 4;
+        (*(int *)*esp) = argc;
+
+        *esp -= 4;
+        (*(int *)*esp) = 0;
+      }
       else
         palloc_free_page (kpage);
     }
 
-
-    /* my token */
-    char *token, *save_ptr;
-    int argc = 0,i;
-    char * copy = malloc(strlen(file_name)+1);
-    strlcpy (copy, file_name, strlen(file_name)+1);
-    for (token = strtok_r (copy, " ", &save_ptr); token != NULL;
-         token = strtok_r (NULL, " ", &save_ptr))
-        argc++;
-    int *argv = calloc(argc,sizeof(int));
-    for (token = strtok_r (file_name, " ", &save_ptr),i=0; token != NULL;
-         token = strtok_r (NULL, " ", &save_ptr),i++)
-    {
-        *esp -= strlen(token) + 1;
-        memcpy(*esp,token,strlen(token) + 1);
-        argv[i]=*esp;
-    }
-    while((int)*esp%4!=0)
-    {
-        *esp-=sizeof(char);
-        char x = 0;
-        memcpy(*esp,&x,sizeof(char));
-    }
-    int zero = 0;
-    *esp-=sizeof(int);
-    memcpy(*esp,&zero,sizeof(int));
-    for(i=argc-1;i>=0;i--)
-    {
-        *esp-=sizeof(int);
-        memcpy(*esp,&argv[i],sizeof(int));
-    }
-    int pt = *esp;
-    *esp-=sizeof(int);
-    memcpy(*esp,&pt,sizeof(int));
-    *esp-=sizeof(int);
-    memcpy(*esp,&argc,sizeof(int));
-    *esp-=sizeof(int);
-    memcpy(*esp,&zero,sizeof(int));
-    free(copy);
-    free(argv);
   return success;
 }
 
