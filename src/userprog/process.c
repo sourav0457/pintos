@@ -19,7 +19,7 @@
 #include "threads/vaddr.h"
 #include <devices/timer.h>
 #include <threads/malloc.h>
-#include "userprog/syscall.c"
+#include "userprog/syscall.h"
 #include "list.h"
 
 static thread_func start_process NO_RETURN;
