@@ -19,6 +19,8 @@
 #include "threads/vaddr.h"
 #include <devices/timer.h>
 #include <threads/malloc.h>
+#include "userprog/syscall.h"
+#include "list.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -78,9 +80,8 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-  struct thread * parent_this_thread;
+  struct thread *par = thread_current()->parent;
 
-  parent_this_thread = thread_current()->parent;
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -88,20 +89,12 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
 
+  par->success = success;
+  sema_up(&par->wait_for_child);
+
   /* If load failed, quit. */
   palloc_free_page (file_name);
 
-  /*my code */
-
-  if (success == false){
-    parent_this_thread->success = false;
-    sema_up(&parent_this_thread->wait_for_child);
-    thread_exit();
-    }
-    else{
-        thread_current()->parent->success=true;
-        sema_up(&thread_current()->parent->wait_for_child);
-    }
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -162,18 +155,19 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  struct list_elem *e;
 
-
-
-  /* my code */
-    int code_exit = cur->code_exit;
-    if(code_exit==-100)
-        exit_proc(-1);
-    printf("%s: exit(%d)\n",cur->name,code_exit);
-    acquire_filesys_lock();
-    file_close(thread_current()->file);
-    close_all_files(&thread_current()->open_files);
-    release_filesys_lock();
+  printf("%s: exit(%d)\n",cur->name,cur->code_exit);
+  file_close(cur->file);
+  
+  while(!list_empty(&cur->open_files))
+  {
+    e = list_pop_front(&cur->open_files);
+    struct proc_file *f = list_entry(e, struct proc_file, elem);
+    file_close(f -> ptr);
+    list_remove(e);
+    free(f);
+  }
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
