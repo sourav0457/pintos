@@ -178,11 +178,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_TELL:
             arg[0] = *((int *) f->esp+1);
-            /*acquire_filesys_lock();
-            f -> eax = file_tell(list_search(arg[0]) -> ptr);
-            release_filesys_lock();
-            break;*/
-            
             struct proc_file *file2 = list_search(arg[0]);
             struct file *fpointer2 = file2->ptr;
             if (file2)
@@ -195,8 +190,21 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_CLOSE:
             arg[0] = *((int *) f->esp+1);
+            struct list *files3 = &thread_current()->open_files;
+            struct list_elem *e;
+            struct proc_file *file3 = NULL;
+            struct file *fpointer3 = file3->ptr;
             acquire_filesys_lock();
-            close_file(&thread_current()->open_files, arg[0]);
+            //close_file(&thread_current()->open_files, arg[0]);
+            
+            for(e = list_begin(files); e!=list_end(files); e=list_next(e)){
+                file3 = list_entry(e, struct proc_file, elem);
+                if(file3->fd == fd){
+                    file_close(fpointer3);
+                    list_remove(e);
+                }
+            }
+            free(file3);
             release_filesys_lock();
             break;
 
