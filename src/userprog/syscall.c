@@ -199,7 +199,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             
             for(e = list_begin(files3); e!=list_end(files3); e=list_next(e)){
                 file3 = list_entry(e, struct proc_file, elem);
-                if(file3->fd == fd){
+                if(file3->fd == arg[0]){
                     file_close(fpointer3);
                     list_remove(e);
                 }
