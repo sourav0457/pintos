@@ -266,7 +266,7 @@ void exit_proc(int status)
         //struct child * c = list_entry(e, struct child, elem);
         //if(c->tid == curr->tid)
         //{
-            curr->is_done = true;
+            //c->is_done = true;
             //c->code_exit = status;
         //}
         //e = list_next(e);
