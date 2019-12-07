@@ -8,6 +8,7 @@
 #include "process.h"
 
 static void syscall_handler (struct intr_frame *);
+void remove_sys(struct intr_frame *,const char * );
 // void is_valid_add(const void*);
 struct proc_file* list_search(int fd);
 void is_valid_add_multiple(int *, unsigned count);
@@ -74,12 +75,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
             // is_valid_add((const void *) arg[0]);
-            acquire_filesys_lock();
-            if(!filesys_remove(arg[0]))
-                f -> eax = false;
-            else
-                f -> eax = true;
-            release_filesys_lock();
+            remove_sys(f,(const char*)arg[0]);
             break;
 
         case SYS_OPEN:
@@ -253,4 +249,8 @@ void close_file(struct list *files, int fd){
     free(f);
 }
 
-bool remove_sys()
+void remove_sys(struct intr_frame *p UNUSED,const char * file){
+    acquire_filesys_lock();
+    p->eax = filesys_remove(file)==NULL ? false : true;
+    release_filesys_lock();
+}
