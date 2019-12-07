@@ -197,7 +197,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             acquire_filesys_lock();
             //close_file(&thread_current()->open_files, arg[0]);
             
-            for(e = list_begin(files); e!=list_end(files); e=list_next(e)){
+            for(e = list_begin(files3); e!=list_end(files3); e=list_next(e)){
                 file3 = list_entry(e, struct proc_file, elem);
                 if(file3->fd == fd){
                     file_close(fpointer3);
