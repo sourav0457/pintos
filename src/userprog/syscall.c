@@ -9,7 +9,7 @@
 
 static void syscall_handler (struct intr_frame *);
 void is_valid_add(const void*);
-struct proc_file* list_search(struct list* files, int fd);
+struct proc_file* list_search(int fd);
 
 //extern bool running;
 
@@ -104,7 +104,7 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_FILESIZE:
             // Declaration
             acquire_filesys_lock();
-            f -> eax = file_length(list_search(&thread_current()->open_files, *(p+1))->ptr);
+            f -> eax = file_length(list_search(*(p+1))->ptr);
             // Declaration
             release_filesys_lock();
             break;
@@ -120,7 +120,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 }
             }
             else{
-                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
+                struct proc_file* fptr = list_search(*(p+5));
                 if(fptr == NULL){
                     f->eax = -1;
                 }
@@ -141,7 +141,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 f -> eax = *(p+7);
             }
             else {
-                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
+                struct proc_file* fptr = list_search(*(p+5));
                 if(fptr == NULL){
                     f -> eax = -1;
                 }
@@ -158,7 +158,7 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_SEEK:
             //Declaration
             acquire_filesys_lock();
-            file_seek(list_search(&thread_current() -> open_files, *(p+4)) -> ptr, *(p+5));
+            file_seek(list_search(*(p+4)) -> ptr, *(p+5));
             // Declaration
             release_filesys_lock();
             break;
@@ -166,7 +166,7 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_TELL:
             //Declaration
             acquire_filesys_lock();
-            f -> eax = file_tell(list_search(&thread_current() -> open_files, *(p+1)) -> ptr);
+            f -> eax = file_tell(list_search(*(p+1)) -> ptr);
             // Declaration
             release_filesys_lock();
             break;
@@ -186,13 +186,28 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 
 
-struct proc_file* list_search(struct list* files, int fd){
+/*struct proc_file* list_search(struct list* files, int fd){
     struct list_elem *e;
     for(e=list_begin(files); e!=list_end(files); e=list_next(e)){
         struct proc_file *f = list_entry(e, struct proc_file, elem);
         return f;
     }
     return NULL;
+}*/
+
+struct proc_file* list_search(int fd)
+{
+    struct list_elem *e;
+    struct proc_file *file_entry = NULL;
+    struct list *file_list = &thread_current()->open_files;
+    for(e=list_begin(file_list); e!=list_end(file_list); e=list_next(e))
+    {
+        struct proc_file *temp = list_entry(e, struct proc_file, elem);
+        if (temp->fd = fd)
+            file_entry = temp;
+        break;
+    }
+    return file_entry;
 }
 
 int exec_proc(char * file_name) {
