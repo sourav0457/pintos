@@ -171,7 +171,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             if (file1)
             {
                 acquire_filesys_lock();
-                file_seek(fpointer, arg[1]);
+                file_seek(fpointer1, arg[1]);
                 release_filesys_lock();
             }
             break;
