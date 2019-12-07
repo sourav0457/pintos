@@ -184,10 +184,11 @@ syscall_handler (struct intr_frame *f UNUSED)
             //break;
 
             struct proc_file *file = list_search(arg[0]);
+            struct file *fpointer = file->ptr;
             if (file)
             {
                 acquire_filesys_lock();
-                f->eax = file_tell(fpointer);
+                f->eax = file_tell(file->fpointer);
                 release_filesys_lock();
             }
             break;
