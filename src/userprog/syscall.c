@@ -137,25 +137,49 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_SEEK:
-            for (int i = 0; i<= 1; i++) {
+            for (int i = 0; i < 2; i++)
                 arg[i] = *((int *) f->esp+4+i);
+
+            struct proc_file *file1 = list_search(arg[0]);
+            struct file *fpointer1 = file1->ptr;
+            if (file1)
+            {
+                acquire_filesys_lock();
+                file_seek(fpointer1, arg[1]);
+                release_filesys_lock();
             }
-            acquire_filesys_lock();
-            file_seek(list_search(arg[0]) -> ptr, arg[1]);
-            release_filesys_lock();
             break;
 
         case SYS_TELL:
             arg[0] = *((int *) f->esp+1);
-            acquire_filesys_lock();
-            f -> eax = file_tell(list_search(arg[0]) -> ptr);
-            release_filesys_lock();
+            struct proc_file *file2 = list_search(arg[0]);
+            struct file *fpointer2 = file2->ptr;
+            if (file2)
+            {
+                acquire_filesys_lock();
+                f->eax = file_tell(fpointer2);
+                release_filesys_lock();
+            }
             break;
 
         case SYS_CLOSE:
             arg[0] = *((int *) f->esp+1);
+            struct list *files3 = &thread_current()->open_files;
+            struct list_elem *e = list_begin(files3);
+
             acquire_filesys_lock();
-            close_file(&thread_current()->open_files, arg[0]);
+            while (e!=list_end(files3))
+            {
+                struct proc_file *file3 = list_entry(e, struct proc_file, elem);
+                if(file3->fd == arg[0])
+                {
+                    file_close(file3->ptr);
+                    list_remove(e);
+                    free(file3);
+                    break;
+                }
+                e=list_next(e);
+            }
             release_filesys_lock();
             break;
 
@@ -197,37 +221,26 @@ int exec_proc(char * file_name) {
     }
 }
 
-void exit_proc(int status){
+void exit_proc(int status)
+{
     struct list_elem *e;
     struct thread * curr = thread_current();
-    e = list_begin(&curr->parent->process_child);
-    while( e!= list_end(&curr->parent->process_child)){
+    struct thread * parent = curr->parent;
+    e = list_begin(&parent->process_child);
+    while( e!= list_end(&parent->process_child)){
         struct child * c = list_entry(e, struct child, elem);
-        if(c->tid == curr->tid){
+        if(c->tid == curr->tid)
+        {
             c->is_done = true;
             c->code_exit = status;
         }
         e = list_next(e);
     }
     curr-> code_exit = status;
-    if(curr->parent->being_waiting_on == curr->tid){
-        sema_up(&thread_current()->parent->wait_for_child);
-    }
+    if(parent->being_waiting_on == curr->tid)
+        sema_up(&parent->wait_for_child);
+
     thread_exit();
-
-}
-
-void close_file(struct list *files, int fd){
-    struct list_elem *e;
-    struct proc_file *f;
-    for(e = list_begin(files); e!=list_end(files); e=list_next(e)){
-        f = list_entry(e, struct proc_file, elem);
-        if(f->fd == fd){
-            file_close(f->ptr);
-            list_remove(e);
-        }
-    }
-    free(f);
 }
 
 void remove_sys(struct intr_frame *p UNUSED,const char * file){
