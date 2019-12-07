@@ -51,7 +51,6 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_EXEC:
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
-            // is_valid_add((const void *) arg[0]);
             f->eax = exec_proc(arg[0]);
             break;
 
@@ -73,7 +72,6 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_REMOVE:
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
-            // is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
             if(filesys_remove(arg[0])==NULL)
                 f -> eax = false;
@@ -85,9 +83,7 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_OPEN:
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
-            // is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
-
             struct file* fptr = filesys_open(arg[0]);
             release_filesys_lock();
             if(fptr == NULL){
@@ -115,22 +111,16 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+5+i);
             }
             is_valid_add_multiple(&arg[1], 1);
-            if(arg[0]==0){
-                int i;
-                uint8_t* buffer = arg[1];
-                for(i=0;i<arg[2];i++){
-                    buffer[i] = input_getc();
-                    f->eax = arg[2];
-                }
+            if(arg[0] == 0){
+                f->eax = input_getc();
             }
             else{
-                struct proc_file* fptr = list_search(arg[0]);
                 if(fptr == NULL){
                     f->eax = -1;
                 }
                 else{
                     acquire_filesys_lock();
-                    f -> eax = file_read(fptr -> ptr, arg[1], arg[2]);
+                    f -> eax = file_read(list_search(arg[0]) -> ptr, arg[1], arg[2]);
                     release_filesys_lock();
                 }
             }
