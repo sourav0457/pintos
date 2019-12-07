@@ -318,7 +318,7 @@ thread_exit (void)
 
 
     while(!list_empty(&thread_current()->process_child)){
-        struct proc_file *f = list_entry (list_pop_front(&thread_current()->process_child), struct child, elem);
+        struct file_entry *f = list_entry (list_pop_front(&thread_current()->process_child), struct child, elem);
         free(f);
     }
 

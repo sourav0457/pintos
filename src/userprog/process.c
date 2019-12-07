@@ -55,6 +55,14 @@ process_execute (const char *file_name)
     if(file_copy == NULL){
         return -1;
     }
+    struct file* f = filesys_open(file_copy);
+    acquire_filesys_lock();
+    if(f == NULL) {
+        release_filesys_lock();
+        return -1;
+    }
+    file_close(f);
+    release_filesys_lock();
     /* Create a new thread to execute FILE_NAME. */
     tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
     free(file_copy);
@@ -163,7 +171,7 @@ process_exit (void)
   while(!list_empty(&cur->open_files))
   {
     e = list_pop_front(&cur->open_files);
-    struct proc_file *f = list_entry(e, struct proc_file, elem);
+    struct file_entry *f = list_entry(e, struct file_entry, elem);
     file_close(f -> ptr);
     list_remove(e);
     free(f);
