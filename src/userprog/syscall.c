@@ -12,6 +12,7 @@ void remove_sys(struct intr_frame *,const char * );
 // void is_valid_add(const void*);
 struct proc_file* list_search(int fd);
 void is_valid_add_multiple(int *, unsigned count);
+void write_sys(struct intr_frame *, int , int , int );
 
 void
 syscall_init (void)
@@ -138,21 +139,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+5+i);
             }
             is_valid_add_multiple(&arg[1], 1);
-            if(arg[0]==1){
-                putbuf(arg[1], arg[2]);
-                f -> eax = arg[2];
-            }
-            else {
-                struct proc_file* fptr = list_search(arg[0]);
-                if(fptr == NULL){
-                    f -> eax = -1;
-                }
-                else {
-                    acquire_filesys_lock();
-                    f -> eax = file_write(fptr -> ptr, arg[1], arg[2]);
-                    release_filesys_lock();
-                }
-            }
+            write_sys(f,arg[0],arg[1],arg[2]);
             break;
 
         case SYS_SEEK:
@@ -254,3 +241,25 @@ void remove_sys(struct intr_frame *p UNUSED,const char * file){
     p->eax = filesys_remove(file)==NULL ? false : true;
     release_filesys_lock();
 }
+
+void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
+    if(size <=0){
+        p->eax = size;
+        return;
+    }
+    if(descriptor==1){
+                putbuf(buff, size);
+                p -> eax = size;
+                return;
+    }
+    struct proc_file* pt = list_search(descriptor);
+    if(pt == NULL){
+        p -> eax = -1;
+        return;
+    }
+    acquire_filesys_lock();
+    p -> eax = file_write(pt -> ptr, buff, size);
+    release_filesys_lock();
+}
+
+
