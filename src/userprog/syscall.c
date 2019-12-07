@@ -204,7 +204,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                     free(file3);
                     break;
                 }
-                e=list_next(e)
+                e=list_next(e);
             }
             release_filesys_lock();
             break;
