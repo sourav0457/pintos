@@ -626,19 +626,6 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
-
-
-/* my code */
-void acquire_filesys_lock()
-{
-    lock_acquire(&filesys_lock);
-}
-void release_filesys_lock()
-{
-    lock_release(&filesys_lock);
-}
-
-
 /*
 bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux)
 {
