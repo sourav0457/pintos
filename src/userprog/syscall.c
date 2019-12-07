@@ -178,11 +178,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_TELL:
             arg[0] = *((int *) f->esp+1);
-            //acquire_filesys_lock();
-            //f -> eax = file_tell(list_search(arg[0]) -> ptr);
-            //release_filesys_lock();
-            //break;
-
+            /*acquire_filesys_lock();
+            f -> eax = file_tell(list_search(arg[0]) -> ptr);
+            release_filesys_lock();
+            break;*/
+            
             struct proc_file *file = list_search(arg[0]);
             struct file *fpointer = file->ptr;
             if (file)
