@@ -163,29 +163,33 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_SEEK:
-            for (int i = 0; i<= 1; i++) {
+            for (int i = 0; i < 2; i++)
                 arg[i] = *((int *) f->esp+4+i);
-            }
+
             struct proc_file *file = list_search(arg[0]);
             struct file *fpointer = file->ptr;
-            
             if (file)
             {
                 acquire_filesys_lock();
                 file_seek(fpointer, arg[1]);
                 release_filesys_lock();
             }
-            //file_seek(list_search(arg[0]) -> ptr, arg[1]);
-            // Declaration
-            
             break;
 
         case SYS_TELL:
             arg[0] = *((int *) f->esp+1);
-            acquire_filesys_lock();
-            f -> eax = file_tell(list_search(arg[0]) -> ptr);
-            // Declaration
-            release_filesys_lock();
+            //acquire_filesys_lock();
+            //f -> eax = file_tell(list_search(arg[0]) -> ptr);
+            //release_filesys_lock();
+            //break;
+
+            struct proc_file *file = list_search(arg[0]);
+            if (file)
+            {
+                acquire_filesys_lock();
+                f->eax = file_tell(fpointer);
+                release_filesys_lock();
+            }
             break;
 
         case SYS_CLOSE:
