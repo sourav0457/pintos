@@ -270,7 +270,7 @@ void exit_proc(int status)
             //c->code_exit = status;
         //}
         //e = list_next(e);
-    }
+    //}
     curr-> code_exit = status;
     if(curr->parent->being_waiting_on == curr->tid)
         sema_up(&curr->parent->wait_for_child);
