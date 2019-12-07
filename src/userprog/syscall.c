@@ -10,6 +10,7 @@
 static void syscall_handler (struct intr_frame *);
 void is_valid_add(const void*);
 struct proc_file* list_search(struct list* files, int fd);
+void is_valid_add_multiple(int *, unsigned count);
 
 extern bool running;
 
@@ -29,6 +30,13 @@ void is_valid_add(const void *vaddr){
     }
 }
 
+void is_valid_add_multiple(int *vaddr, unsigned count){
+    for(int i = 0; i < count; i++) {
+        if(!is_user_vaddr((const void *) vaddr[i]) || !pagedir_get_page(thread_current()->pagedir, (const void *) vaddr[i]))
+            exit_proc(-1);
+    }
+}
+
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
@@ -43,13 +51,14 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_EXIT:
-            exit_proc(*(p+1));
+            arg[0] = *((int *) f->esp+1);
+            exit_proc(arg[0]);
             break;
 
         case SYS_EXEC:
             arg[0] = *((int *) f->esp+1);
             is_valid_add((const void *) arg[0]);
-            f->eax = exec_proc(*(p+1));
+            f->eax = exec_proc(arg[0]);
             break;
 
         case SYS_WAIT:
@@ -58,33 +67,32 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_CREATE:
-            is_valid_add(*(p+4));
-            // Declaration
+            for (int i = 0; i<= 1; i++) {
+                arg[i] = *((int *) f->esp+4+i);
+            }
+            is_valid_add_multiple(&arg[0], 1);
             acquire_filesys_lock();
-            f->eax = filesys_create(*(p+4), *(p+5));
-            // Declaration: extern bool running??
+            f->eax = filesys_create(arg[0], arg[1]);
             release_filesys_lock();
             break;
             
         case SYS_REMOVE:
-            is_valid_add(*(p+1));
-            //Declaration
+            arg[0] = *((int *) f->esp+1);
+            is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
-            if(filesys_remove(*(p+1))==NULL)
+            if(filesys_remove(arg[0])==NULL)
                 f -> eax = false;
             else
                 f -> eax = true;
-            // Declaration
             release_filesys_lock();
             break;
 
         case SYS_OPEN:
-            is_valid_add(*(p+1));
-            // Declaration:
+            arg[0] = *((int *) f->esp+1);
+            is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
 
-            struct file* fptr = filesys_open(*(p+1));
-            // Declaration
+            struct file* fptr = filesys_open(arg[0]);
             release_filesys_lock();
             if(fptr == NULL){
                 f -> eax = -1;
@@ -100,80 +108,80 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
 
         case SYS_FILESIZE:
-            // Declaration
+            arg[0] = *((int *) f->esp+1);
             acquire_filesys_lock();
-            f -> eax = file_length(list_search(&thread_current()->open_files, *(p+1))->ptr);
-            // Declaration
+            f -> eax = file_length(list_search(&thread_current()->open_files, arg[0])->ptr);
             release_filesys_lock();
             break;
 
         case SYS_READ:
-            is_valid_add(*(p+6));
-            if(*(p+5)==0){
+            for (int i = 0; i<= 2; i++) {
+                arg[i] = *((int *) f->esp+5+i);
+            }
+            is_valid_add_multiple(&arg[1], 1);
+            if(arg[0]==0){
                 int i;
-                uint8_t* buffer = *(p+6);
-                for(i=0;i<*(p+7);i++){
+                uint8_t* buffer = arg[1];
+                for(i=0;i<arg[2];i++){
                     buffer[i] = input_getc();
-                    f->eax = *(p+7);
+                    f->eax = arg[2];
                 }
             }
             else{
-                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
+                struct proc_file* fptr = list_search(&thread_current()->open_files, arg[0]);
                 if(fptr == NULL){
                     f->eax = -1;
                 }
                 else{
-                    //Declaration
                     acquire_filesys_lock();
-                    f -> eax = file_read(fptr -> ptr, *(p+6), *(p+7));
-                    // Declaration
+                    f -> eax = file_read(fptr -> ptr, arg[1], arg[2]);
                     release_filesys_lock();
                 }
             }
             break;
 
         case SYS_WRITE:
-            is_valid_add(*(p+6));
-            if(*(p+5)==1){
-                putbuf(*(p+6), *(p+7));
-                f -> eax = *(p+7);
+            for (int i = 0; i<= 2; i++) {
+                arg[i] = *((int *) f->esp+5+i);
+            }
+            is_valid_add_multiple(&arg[1], 1);
+            if(arg[0]==1){
+                putbuf(arg[1], arg[2]);
+                f -> eax = arg[2];
             }
             else {
-                struct proc_file* fptr = list_search(&thread_current()->open_files, *(p+5));
+                struct proc_file* fptr = list_search(&thread_current()->open_files, arg[0]);
                 if(fptr == NULL){
                     f -> eax = -1;
                 }
                 else {
-                    // Declaration
                     acquire_filesys_lock();
-                    f -> eax = file_write(fptr -> ptr, *(p+6), *(p+7));
-                    // Declaration
+                    f -> eax = file_write(fptr -> ptr, arg[1], arg[2]);
                     release_filesys_lock();
                 }
             }
             break;
 
         case SYS_SEEK:
-            //Declaration
+            for (int i = 0; i<= 1; i++) {
+                arg[i] = *((int *) f->esp+4+i);
+            }
             acquire_filesys_lock();
-            file_seek(list_search(&thread_current() -> open_files, *(p+4)) -> ptr, *(p+5));
-            // Declaration
+            file_seek(list_search(&thread_current() -> open_files, arg[0]) -> ptr, arg[1]);
             release_filesys_lock();
             break;
 
         case SYS_TELL:
-            //Declaration
+            arg[0] = *((int *) f->esp+1);
             acquire_filesys_lock();
-            f -> eax = file_tell(list_search(&thread_current() -> open_files, *(p+1)) -> ptr);
-            // Declaration
+            f -> eax = file_tell(list_search(&thread_current() -> open_files, arg[0]) -> ptr);
             release_filesys_lock();
             break;
 
         case SYS_CLOSE:
-            //Declaration
+            arg[0] = *((int *) f->esp+1);
             acquire_filesys_lock();
-            close_file(&thread_current()->open_files, *(p+1));
-            // Declaration
+            close_file(&thread_current()->open_files, arg[0]);
             release_filesys_lock();
             break;
 
