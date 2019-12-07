@@ -20,15 +20,10 @@ syscall_init (void)
     intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
-// void is_valid_add(const void *vaddr){
-//     if(!is_user_vaddr(vaddr) || !pagedir_get_page(thread_current()->pagedir, vaddr))
-//         exit_proc(-1);
-// }
-
 void is_valid_add_multiple(int *vaddr, unsigned count){
     for(int i = 0; i < count; i++) {
         if(!is_user_vaddr((const void *) vaddr[i]) || !pagedir_get_page(thread_current()->pagedir, (const void *) vaddr[i]))
-            exit_proc(-1);
+            exit_process(-1);
     }
 }
 
@@ -47,7 +42,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_EXIT:
             arg[0] = *((int *) f->esp+1);
-            exit_proc(arg[0]);
+            exit_process(arg[0]);
             break;
 
         case SYS_EXEC:
@@ -221,7 +216,7 @@ int exec_proc(char * file_name) {
     }
 }
 
-void exit_proc(int status)
+void exit_process(int status)
 {
     struct list_elem *e;
     struct thread * curr = thread_current();
