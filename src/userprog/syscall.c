@@ -33,14 +33,11 @@ void is_valid_add_multiple(int *vaddr, unsigned count){
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
-    int *p = f -> esp;
     int arg[3];
     for (int i = 0; i< 2; i++) {
         arg[i] = ((int *)f->esp)+i;
     }
     is_valid_add_multiple(&arg[0], 2);
-
-    int system_call = *p;
     switch(*((int *)f->esp)){
         case SYS_HALT:
             shutdown_power_off();
