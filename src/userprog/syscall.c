@@ -8,11 +8,9 @@
 #include "process.h"
 
 static void syscall_handler (struct intr_frame *);
-void is_valid_add(const void*);
+// void is_valid_add(const void*);
 struct proc_file* list_search(int fd);
 void is_valid_add_multiple(int *, unsigned count);
-
-//extern bool running;
 
 void
 syscall_init (void)
@@ -20,15 +18,10 @@ syscall_init (void)
     intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
-void is_valid_add(const void *vaddr){
-    if(!is_user_vaddr(vaddr)){
-        exit_proc(-1);
-    }
-    void *p = pagedir_get_page(thread_current()->pagedir, vaddr);
-    if(!p){
-        exit_proc(-1);
-    }
-}
+// void is_valid_add(const void *vaddr){
+//     if(!is_user_vaddr(vaddr) || !pagedir_get_page(thread_current()->pagedir, vaddr))
+//         exit_proc(-1);
+// }
 
 void is_valid_add_multiple(int *vaddr, unsigned count){
     for(int i = 0; i < count; i++) {
@@ -42,10 +35,13 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
     int *p = f -> esp;
     int arg[3];
-    is_valid_add(p);
-    is_valid_add(p+1);
+    for (int i = 0; i< 2; i++) {
+        arg[i] = ((int *)f->esp)+i;
+    }
+    is_valid_add_multiple(&arg[0], 2);
+
     int system_call = *p;
-    switch(system_call){
+    switch(*((int *)f->esp)){
         case SYS_HALT:
             shutdown_power_off();
             break;
@@ -57,7 +53,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_EXEC:
             arg[0] = *((int *) f->esp+1);
-            is_valid_add((const void *) arg[0]);
+            is_valid_add_multiple(&arg[0], 1);
+            // is_valid_add((const void *) arg[0]);
             f->eax = exec_proc(arg[0]);
             break;
 
@@ -78,7 +75,8 @@ syscall_handler (struct intr_frame *f UNUSED)
             
         case SYS_REMOVE:
             arg[0] = *((int *) f->esp+1);
-            is_valid_add((const void *) arg[0]);
+            is_valid_add_multiple(&arg[0], 1);
+            // is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
             if(filesys_remove(arg[0])==NULL)
                 f -> eax = false;
@@ -89,7 +87,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
         case SYS_OPEN:
             arg[0] = *((int *) f->esp+1);
-            is_valid_add((const void *) arg[0]);
+            is_valid_add_multiple(&arg[0], 1);
+            // is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
 
             struct file* fptr = filesys_open(arg[0]);
@@ -168,7 +167,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             }
             acquire_filesys_lock();
             file_seek(list_search(arg[0]) -> ptr, arg[1]);
-            // Declaration
             release_filesys_lock();
             break;
 
@@ -176,7 +174,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             acquire_filesys_lock();
             f -> eax = file_tell(list_search(arg[0]) -> ptr);
-            // Declaration
             release_filesys_lock();
             break;
 
@@ -191,17 +188,6 @@ syscall_handler (struct intr_frame *f UNUSED)
             printf("Running default condition");
     }
 }
-
-
-
-/*struct proc_file* list_search(struct list* files, int fd){
-    struct list_elem *e;
-    for(e=list_begin(files); e!=list_end(files); e=list_next(e)){
-        struct proc_file *f = list_entry(e, struct proc_file, elem);
-        return f;
-    }
-    return NULL;
-}*/
 
 struct proc_file* list_search(int fd)
 {
@@ -238,13 +224,6 @@ int exec_proc(char * file_name) {
 
 void exit_proc(int status){
     struct list_elem *e;
-//    for(e = list_begin(&thread_current()->parent->process_child); e!= list_end(&thread_current()->parent->process_child); e=list_next(e)){
-//        struct child *f = list_entry(e, struct child, elem);
-//        if(f->tid == thread_current()->tid){
-//            f->is_done = true;
-//            f-> code_exit = status;
-//        }
-//    }
     struct thread * curr = thread_current();
     e = list_begin(&curr->parent->process_child);
     while( e!= list_end(&curr->parent->process_child)){
