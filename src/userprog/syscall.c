@@ -75,7 +75,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             struct list *files3 = &thread_current()->open_files;
             struct list_elem *e = list_begin(files3);
 
-            acquire_filesys_lock();
+            lock_acquire(&filesys_lock);
             while (e!=list_end(files3))
             {
                 struct file_entry *file3 = list_entry(e, struct file_entry, elem);
@@ -88,15 +88,15 @@ syscall_handler (struct intr_frame *f UNUSED)
                 }
                 e=list_next(e);
             }
-            release_filesys_lock();
+            lock_release(&filesys_lock);
             break;
 
         case SYS_OPEN:
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
-            acquire_filesys_lock();
+            lock_acquire(&filesys_lock);
             struct file* file_ptr = filesys_open(arg[0]);
-            release_filesys_lock();
+            lock_release(&filesys_lock);
             int set_value;
             if(file_ptr == NULL){
                 set_value = -1;
@@ -118,18 +118,18 @@ syscall_handler (struct intr_frame *f UNUSED)
             struct file *fpointer2 = file2->ptr;
             if (file2)
             {
-                acquire_filesys_lock();
+                lock_acquire(&filesys_lock);
                 f->eax = file_tell(fpointer2);
-                release_filesys_lock();
+                lock_release(&filesys_lock);
             }
             break;
 
         case SYS_FILESIZE:
             arg[0] = *((int *) f->esp+1);
-            acquire_filesys_lock();
+            lock_acquire(&filesys_lock);
             struct file_entry * file_open = file_list_entry(arg[0]);
             f -> eax = file_length(file_open->ptr);
-            release_filesys_lock();
+            lock_release(&filesys_lock);
             break;
 
         case SYS_WRITE:
@@ -148,9 +148,9 @@ syscall_handler (struct intr_frame *f UNUSED)
             struct file *fpointer1 = file1->ptr;
             if (file1)
             {
-                acquire_filesys_lock();
+                lock_acquire(&filesys_lock);
                 file_seek(fpointer1, arg[1]);
-                release_filesys_lock();
+                lock_release(&filesys_lock);
             }
             break;
 
@@ -159,9 +159,9 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+4+i);
             }
             is_valid_add_multiple(&arg[0], 1);
-            acquire_filesys_lock();
+            lock_acquire(&filesys_lock);
             f->eax = filesys_create(arg[0], arg[1]);
-            release_filesys_lock();
+            lock_release(&filesys_lock);
             break;
 
         case SYS_READ:
@@ -178,9 +178,9 @@ syscall_handler (struct intr_frame *f UNUSED)
                     f->eax = -1;
                 }
                 else{
-                    acquire_filesys_lock();
+                    lock_acquire(&filesys_lock);
                     f -> eax = file_read(fptr -> ptr, arg[1], arg[2]);
-                    release_filesys_lock();
+                    lock_release(&filesys_lock);
                 }
             }
             break;
@@ -229,9 +229,9 @@ void exit_process(int status)
 }
 
 void remove_sys(struct intr_frame *p UNUSED,const char * file){
-    acquire_filesys_lock();
+    lock_acquire(&filesys_lock);
     p->eax = filesys_remove(file)==NULL ? false : true;
-    release_filesys_lock();
+    lock_release(&filesys_lock);
 }
 
 void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
@@ -249,9 +249,9 @@ void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
         p -> eax = -1;
         return;
     }
-    acquire_filesys_lock();
+    lock_acquire(&filesys_lock);
     p -> eax = file_write(pt -> ptr, buff, size);
-    release_filesys_lock();
+    lock_release(&filesys_lock);
 }
 
 

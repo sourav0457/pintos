@@ -100,7 +100,6 @@ struct thread
     struct file * file;
     struct list open_files;
     int code_exit;
-//    struct wrapper_file * wrap_file;
     struct thread* parent;
     int count_file_descriptor;
     struct semaphore wait_for_child;
@@ -117,9 +116,6 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
-/* my code */
-
-
 struct child {
     bool is_done;
     int tid;
@@ -127,11 +123,7 @@ struct child {
     int code_exit;
 };
 
-//struct wrapper_file{
-//    struct file * file;
-//    int exec;
-//};
-
+struct lock filesys_lock;
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

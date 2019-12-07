@@ -45,37 +45,34 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  file_copy = malloc(strlen(file_name)+1);
+  strlcpy( file_copy,file_name,strlen(file_name)+1);
+  file_copy = strtok_r (file_copy," ",&a);
+  if(file_copy == NULL){
+    return -1;
+  }
+  struct file* f = filesys_open(file_copy);
+  lock_acquire(&filesys_lock);
+  if(f == NULL)
+  {
+    lock_release(&filesys_lock);
+    return -1;
+  }
+  file_close(f);
+  lock_release(&filesys_lock);
 
-  /* my code */
+  /* Create a new thread to execute FILE_NAME. */
+  tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
+  free(file_copy);
+  if (tid == TID_ERROR)
+  {
+      palloc_free_page(fn_copy);
+      return tid;
+  }
 
-
-     file_copy = malloc(strlen(file_name)+1);
-    strlcpy( file_copy,file_name,strlen(file_name)+1);
-     file_copy = strtok_r (file_copy," ",&a);
-    if(file_copy == NULL){
-        return -1;
-    }
-    struct file* f = filesys_open(file_copy);
-    acquire_filesys_lock();
-    if(f == NULL) {
-        release_filesys_lock();
-        return -1;
-    }
-    file_close(f);
-    release_filesys_lock();
-    /* Create a new thread to execute FILE_NAME. */
-    tid = thread_create (file_copy, PRI_DEFAULT, start_process, fn_copy);
-    free(file_copy);
-    if (tid == TID_ERROR) {
-        palloc_free_page(fn_copy);
-        return tid;
-    }
-
-
-  /* my code */
-    sema_down(&thread_current()->wait_for_child);
-    if(!thread_current()->success)
-        return -1;
+  sema_down(&thread_current()->wait_for_child);
+  if(!thread_current()->success)
+    return -1;
 
   return tid;
 }
