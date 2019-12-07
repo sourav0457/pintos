@@ -9,7 +9,6 @@
 
 static void syscall_handler (struct intr_frame *);
 void remove_sys(struct intr_frame *,const char * );
-// void is_valid_add(const void*);
 struct file_entry* file_list_entry(int fd);
 void is_valid_add_multiple(int *, unsigned count);
 void write_sys(struct intr_frame *, int , int , int );
@@ -19,13 +18,6 @@ syscall_init (void)
 {
     intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
-
-// void is_valid_add(const void *vaddr){
-//     if(!is_user_vaddr(vaddr) || !pagedir_get_page(thread_current()->pagedir, vaddr))
-//
-//
-//        exit_proc(-1);
-// }
 
 void is_valid_add_multiple(int *vaddr, unsigned count){
     for(int i = 0; i < count; i++) {
@@ -101,7 +93,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             if(file_ptr == NULL){
                 set_value = -1;
             }
-            else{
+            else {
                 struct thread *curr_thread = thread_current();
                 struct file_entry *file = malloc(sizeof(struct file_entry));
                 file -> ptr = file_ptr;
@@ -253,5 +245,3 @@ void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
     p -> eax = file_write(pt -> ptr, buff, size);
     lock_release(&filesys_lock);
 }
-
-
