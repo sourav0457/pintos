@@ -236,31 +236,46 @@ int exec_proc(char * file_name) {
     }
 }
 
-void exit_proc(int status){
+/*void exit_proc(int status)
+{
     struct list_elem *e;
-//    for(e = list_begin(&thread_current()->parent->process_child); e!= list_end(&thread_current()->parent->process_child); e=list_next(e)){
-//        struct child *f = list_entry(e, struct child, elem);
-//        if(f->tid == thread_current()->tid){
-//            f->is_done = true;
-//            f-> code_exit = status;
-//        }
-//    }
     struct thread * curr = thread_current();
     e = list_begin(&curr->parent->process_child);
     while( e!= list_end(&curr->parent->process_child)){
         struct child * c = list_entry(e, struct child, elem);
-        if(c->tid == curr->tid){
+        if(c->tid == curr->tid)
+        {
             c->is_done = true;
             c->code_exit = status;
         }
         e = list_next(e);
     }
     curr-> code_exit = status;
-    if(curr->parent->being_waiting_on == curr->tid){
-        sema_up(&thread_current()->parent->wait_for_child);
-    }
-    thread_exit();
+    if(curr->parent->being_waiting_on == curr->tid)
+        sema_up(&curr->parent->wait_for_child);
 
+    thread_exit();
+}*/
+
+void exit_proc(int status)
+{
+    //struct list_elem *e;
+    struct thread * curr = thread_current();
+    //e = list_begin(&curr->parent->process_child);
+    //while( e!= list_end(&curr->parent->process_child)){
+        //struct child * c = list_entry(e, struct child, elem);
+        //if(c->tid == curr->tid)
+        //{
+            curr->is_done = true;
+            //c->code_exit = status;
+        //}
+        //e = list_next(e);
+    }
+    curr-> code_exit = status;
+    if(curr->parent->being_waiting_on == curr->tid)
+        sema_up(&curr->parent->wait_for_child);
+
+    thread_exit();
 }
 
 void close_file(struct list *files, int fd){
