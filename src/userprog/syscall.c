@@ -84,19 +84,21 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
             acquire_filesys_lock();
-            struct file* fptr = filesys_open(arg[0]);
+            struct file* file_ptr = filesys_open(arg[0]);
             release_filesys_lock();
-            if(fptr == NULL){
-                f -> eax = -1;
+            int set_value;
+            if(file_ptr == NULL){
+                set_value = -1;
             }
             else{
-                struct proc_file *pfile = malloc(sizeof(*pfile));
-                pfile -> ptr = fptr;
-                pfile -> fd = thread_current() -> count_file_descriptor;
-                thread_current() -> count_file_descriptor++;
-                list_push_back(&thread_current()->open_files, &pfile->elem);
-                f -> eax = pfile -> fd;
+                struct thread *curr_thread = thread_current();
+                struct proc_file *file = malloc(sizeof(struct proc_file));
+                file -> ptr = file_ptr;
+                file -> fd = curr_thread -> count_file_descriptor++;
+                list_push_back(&curr_thread->open_files, &file->elem);
+                set_value = file -> fd;
             }
+            f -> eax = set_value;
             break;
 
         case SYS_FILESIZE:
@@ -115,12 +117,13 @@ syscall_handler (struct intr_frame *f UNUSED)
                 f->eax = input_getc();
             }
             else{
+                struct proc_file* fptr = list_search(arg[0]);
                 if(fptr == NULL){
                     f->eax = -1;
                 }
                 else{
                     acquire_filesys_lock();
-                    f -> eax = file_read(list_search(arg[0]) -> ptr, arg[1], arg[2]);
+                    f -> eax = file_read(fptr -> ptr, arg[1], arg[2]);
                     release_filesys_lock();
                 }
             }
