@@ -192,7 +192,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             struct list *files3 = &thread_current()->open_files;
             struct list_elem *e;
-            struct proc_file *file3 = NULL;
+            struct proc_file *file3;
             struct file *fpointer3 = file3->ptr;
             acquire_filesys_lock();
             //close_file(&thread_current()->open_files, arg[0]);
@@ -299,7 +299,7 @@ void exit_proc(int status)
     thread_exit();
 }
 
-void close_file(struct list *files, int fd){
+/*void close_file(struct list *files, int fd){
     struct list_elem *e;
     struct proc_file *f;
     for(e = list_begin(files); e!=list_end(files); e=list_next(e)){
@@ -309,5 +309,5 @@ void close_file(struct list *files, int fd){
             list_remove(e);
         }
     }
-    free(f);
+    free(f);*/
 }
