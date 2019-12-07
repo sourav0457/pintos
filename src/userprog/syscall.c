@@ -191,22 +191,21 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_CLOSE:
             arg[0] = *((int *) f->esp+1);
             struct list *files3 = &thread_current()->open_files;
-            struct list_elem *e;
-            //struct proc_file *file3;
-            //struct file *fpointer3 = file3->ptr;
+            struct list_elem *e = list_begin(files3);
+
             acquire_filesys_lock();
-            //close_file(&thread_current()->open_files, arg[0]);
-            
-            for(e = list_begin(files3); e!=list_end(files3); e=list_next(e)){
+            while (e!=list_end(files3))
+            {
                 struct proc_file *file3 = list_entry(e, struct proc_file, elem);
-                if(file3->fd == arg[0]){
+                if(file3->fd == arg[0])
+                {
                     file_close(file3->ptr);
                     list_remove(e);
                     free(file3);
                     break;
                 }
+                e=list_next(e)
             }
-            //free(file3);
             release_filesys_lock();
             break;
 
