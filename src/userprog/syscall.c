@@ -309,5 +309,5 @@ void exit_proc(int status)
             list_remove(e);
         }
     }
-    free(f);*/
-}
+    free(f);
+}*/
