@@ -192,7 +192,7 @@ thread_create (const char *name, int priority,
   tid = t->tid = allocate_tid ();
   /*my code */
     enum intr_level old_level;
-    struct child* c = malloc(sizeof(*c));
+    struct child* c = malloc(sizeof(struct child));
     c->tid = tid;
     c->code_exit = t->code_exit;
     c->is_done = false;
@@ -201,10 +201,6 @@ thread_create (const char *name, int priority,
        Do this atomically so intermediate values for the 'stack'
        member cannot be observed. */
     old_level = intr_disable ();
-
-
-
-
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -221,8 +217,7 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-
-    intr_set_level (old_level);
+  intr_set_level (old_level);
 
   /* Add to run queue. */
   thread_unblock (t);

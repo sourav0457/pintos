@@ -252,8 +252,9 @@ void exit_proc(int status)
 {
     struct list_elem *e;
     struct thread * curr = thread_current();
-    e = list_begin(&curr->parent->process_child);
-    while( e!= list_end(&curr->parent->process_child)){
+    struct thread * parent = curr->parent;
+    e = list_begin(&parent->process_child);
+    while( e!= list_end(&parent->process_child)){
         struct child * c = list_entry(e, struct child, elem);
         if(c->tid == curr->tid)
         {
@@ -263,8 +264,8 @@ void exit_proc(int status)
         e = list_next(e);
     }
     curr-> code_exit = status;
-    if(curr->parent->being_waiting_on == curr->tid)
-        sema_up(&curr->parent->wait_for_child);
+    if(parent->being_waiting_on == curr->tid)
+        sema_up(&parent->wait_for_child);
 
     thread_exit();
 }
