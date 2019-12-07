@@ -11,7 +11,7 @@ static void syscall_handler (struct intr_frame *);
 void is_valid_add(const void*);
 struct proc_file* list_search(struct list* files, int fd);
 
-extern bool running;
+//extern bool running;
 
 /*struct proc_file {
     struct file* ptr;
