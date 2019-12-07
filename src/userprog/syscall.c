@@ -188,7 +188,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             if (file2)
             {
                 acquire_filesys_lock();
-                f->eax = file_tell(fpointer);
+                f->eax = file_tell(fpointer2);
                 release_filesys_lock();
             }
             break;
