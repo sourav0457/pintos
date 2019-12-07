@@ -6,7 +6,6 @@
 #include "threads/vaddr.h"
 #include "list.h"
 #include "process.h"
-#include "filesys/filesys.h"
 
 static void syscall_handler (struct intr_frame *);
 void remove_sys(struct intr_frame *,const char * );

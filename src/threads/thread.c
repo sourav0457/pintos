@@ -25,7 +25,7 @@
 static struct list ready_list;
 
 /*my change */
-struct lock filesys_lock;
+//struct lock filesys_lock;
 
 
 

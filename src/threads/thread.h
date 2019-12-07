@@ -117,9 +117,6 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
-/* my code */
-
-
 struct child {
     bool is_done;
     int tid;
@@ -127,10 +124,7 @@ struct child {
     int code_exit;
 };
 
-//struct wrapper_file{
-//    struct file * file;
-//    int exec;
-//};
+struct lock filesys_lock;
 
 
 /* If false (default), use round-robin scheduler.
