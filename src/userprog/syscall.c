@@ -12,8 +12,6 @@ void is_valid_add(const void*);
 struct proc_file* list_search(int fd);
 void is_valid_add_multiple(int *, unsigned count);
 
-//extern bool running;
-
 void
 syscall_init (void)
 {
@@ -216,14 +214,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 
 
-/*struct proc_file* list_search(struct list* files, int fd){
-    struct list_elem *e;
-    for(e=list_begin(files); e!=list_end(files); e=list_next(e)){
-        struct proc_file *f = list_entry(e, struct proc_file, elem);
-        return f;
-    }
-    return NULL;
-}*/
 
 struct proc_file* list_search(int fd)
 {
@@ -258,27 +248,6 @@ int exec_proc(char * file_name) {
     }
 }
 
-/*void exit_proc(int status)
-{
-    struct list_elem *e;
-    struct thread * curr = thread_current();
-    e = list_begin(&curr->parent->process_child);
-    while( e!= list_end(&curr->parent->process_child)){
-        struct child * c = list_entry(e, struct child, elem);
-        if(c->tid == curr->tid)
-        {
-            c->is_done = true;
-            c->code_exit = status;
-        }
-        e = list_next(e);
-    }
-    curr-> code_exit = status;
-    if(curr->parent->being_waiting_on == curr->tid)
-        sema_up(&curr->parent->wait_for_child);
-
-    thread_exit();
-}*/
-
 void exit_proc(int status)
 {
     struct list_elem *e;
@@ -299,16 +268,3 @@ void exit_proc(int status)
 
     thread_exit();
 }
-
-/*void close_file(struct list *files, int fd){
-    struct list_elem *e;
-    struct proc_file *f;
-    for(e = list_begin(files); e!=list_end(files); e=list_next(e)){
-        f = list_entry(e, struct proc_file, elem);
-        if(f->fd == fd){
-            file_close(f->ptr);
-            list_remove(e);
-        }
-    }
-    free(f);
-}*/
