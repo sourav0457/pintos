@@ -80,7 +80,7 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             is_valid_add((const void *) arg[0]);
             acquire_filesys_lock();
-            if(filesys_remove(arg[0])==NULL)
+            if(!filesys_remove(arg[0]))
                 f -> eax = false;
             else
                 f -> eax = true;
@@ -110,7 +110,8 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_FILESIZE:
             arg[0] = *((int *) f->esp+1);
             acquire_filesys_lock();
-            f -> eax = file_length(list_search(arg[0])->ptr);
+            struct proc_file * file_open = list_search(arg[0]);
+            f -> eax = file_length(file_open->ptr);
             release_filesys_lock();
             break;
 
@@ -275,3 +276,5 @@ void close_file(struct list *files, int fd){
     }
     free(f);
 }
+
+bool remove_sys()
