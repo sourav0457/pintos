@@ -169,29 +169,7 @@ struct file_entry* file_list_entry(int fd)
     }
     return file_entry;
 }
-/*
-void exit_process(int status)
-{
-    struct list_elem *e;
-    struct thread * curr = thread_current();
-    struct thread * parent = curr->parent;
-    e = list_begin(&parent->process_child);
-    while( e!= list_end(&parent->process_child)){
-        struct child * c = list_entry(e, struct child, elem);
-        if(c->tid == curr->tid)
-        {
-            c->is_done = true;
-            c->code_exit = status;
-        }
-        e = list_next(e);
-    }
-    curr-> code_exit = status;
-    if(parent->being_waiting_on == curr->tid)
-        sema_up(&parent->wait_for_child);
 
-    thread_exit();
-}
-*/
 void remove_sys(struct intr_frame *p UNUSED,const char * file){
     lock_acquire(&filesys_lock);
     p->eax = filesys_remove(file)==NULL ? false : true;

@@ -120,38 +120,39 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 
-/*my code*/
 int
 process_wait (tid_t child_tid)
 {
-    struct list_elem *e;
-    struct child *ch = NULL;
-    struct list_elem *e1 = NULL;
-    struct thread *curr_thread = thread_current();
+  struct list_elem *e;
+  struct child *ch = NULL;
+  struct list_elem *e1 = NULL;
+  struct thread *curr_thread = thread_current();
 
-    if(list_empty(&curr_thread->process_child))
-      return -1;
+  if(list_empty(&curr_thread->process_child))
+    return -1;
 
-    e = list_begin(&curr_thread->process_child);
-    while (e!= list_end(&curr_thread->process_child)) {
-      struct child *f = list_entry(e, struct child, elem);
-      if(f -> tid == child_tid){
-        ch = f;
-        e1 = e;
-        curr_thread -> being_waiting_on = ch -> tid;
-        break;
-      }
-      e = list_next(e);
+  e = list_begin(&curr_thread->process_child);
+  while (e!= list_end(&curr_thread->process_child))
+  {
+    struct child *f = list_entry(e, struct child, elem);
+    if(f -> tid == child_tid)
+    {
+      ch = f;
+      e1 = e;
+      curr_thread -> being_waiting_on = ch -> tid;
+      break;
     }
-    
-    if (e == list_end(&curr_thread->process_child))
-      return -1;
-    int status = ch -> code_exit;
-    if(!ch->is_done)
-        sema_down(&curr_thread->wait_for_child);
-    list_remove(e1);
+    e = list_next(e);
+  }
+  
+  if (e == list_end(&curr_thread->process_child))
+    return -1;
+  int status = ch -> code_exit;
+  if(!ch->is_done)
+    sema_down(&curr_thread->wait_for_child);
+  list_remove(e1);
 
-    return ch -> code_exit;
+  return ch -> code_exit;
 }
 
 /* Free the current process's resources. */
@@ -396,19 +397,15 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  /* My changes */
   if (success)
   {
     struct thread *current_thread;
     current_thread = thread_current();
     current_thread->file = file;
-//    current_thread->wrap_file->file = file;
     file_deny_write(file);
   }
   else
-  {
     file_close(file);
-  }
 
   return success;
 }
