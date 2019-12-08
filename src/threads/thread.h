@@ -6,6 +6,7 @@
 #include <list.h>
 #include <stdint.h>
 
+
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -146,6 +147,7 @@ tid_t thread_tid (void);
 const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
+void exit_process(int status);
 void thread_yield (void);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
@@ -154,8 +156,6 @@ void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
-
-//bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux);
 
 int thread_get_nice (void);
 void thread_set_nice (int);

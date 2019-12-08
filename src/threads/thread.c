@@ -24,12 +24,6 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
-/*my change */
-
-
-
-
-
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -99,7 +93,6 @@ thread_init (void)
   list_init (&ready_list);
   list_init (&all_list);
 
-  /* my change */
   lock_init(&filesys_lock);
 
   /* Set up a thread structure for the running thread. */
@@ -190,17 +183,18 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-  /*my code */
-    enum intr_level old_level;
-    struct child* c = malloc(sizeof(struct child));
-    c->tid = tid;
-    c->code_exit = t->code_exit;
-    c->is_done = false;
-    list_push_back (&running_thread()->process_child, &c->elem);
-    /* Prepare thread for first run by initializing its stack.
-       Do this atomically so intermediate values for the 'stack'
-       member cannot be observed. */
-    old_level = intr_disable ();
+  enum intr_level old_level;
+
+  struct child* c = malloc(sizeof(struct child));
+  c->tid = tid;
+  c->code_exit = t->code_exit;
+  c->is_done = false;
+  list_push_back (&running_thread()->process_child, &c->elem);
+
+  /* Prepare thread for first run by initializing its stack.
+      Do this atomically so intermediate values for the 'stack'
+      member cannot be observed. */
+  old_level = intr_disable ();
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -311,22 +305,42 @@ thread_exit (void)
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
 
+  struct  thread * curr = thread_current();
+  struct file_entry * fileEntry;
+  while(!list_empty(&curr->process_child))
+  {
+    struct list_elem *list_elem = list_pop_front(&curr->process_child);
+    fileEntry = list_entry(list_elem,struct child, elem);
+  }
 
-
-
-  /* my code */
-
-
-    while(!list_empty(&thread_current()->process_child)){
-        struct file_entry *f = list_entry (list_pop_front(&thread_current()->process_child), struct child, elem);
-        free(f);
-    }
-
-    intr_disable ();
+  intr_disable ();
   list_remove (&thread_current()->allelem);
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
+}
+
+void exit_process(int status)
+{
+  struct list_elem *e;
+  struct thread * curr = thread_current();
+  struct thread * parent = curr->parent;
+  e = list_begin(&parent->process_child);
+  while( e!= list_end(&parent->process_child))
+  {
+    struct child *c = list_entry(e, struct child, elem);
+    if(c->tid == curr->tid)
+    {
+      c->is_done = true;
+        c->code_exit = status;
+    }
+    e = list_next(e);
+  }
+  curr-> code_exit = status;
+  if(parent->being_waiting_on == curr->tid)
+      sema_up(&parent->wait_for_child);
+
+  thread_exit();
 }
 
 /* Yields the CPU.  The current thread is not put to sleep and
@@ -484,8 +498,6 @@ is_thread (struct thread *t)
 static void
 init_thread (struct thread *t, const char *name, int priority)
 {
-//  enum intr_level old_level;
-
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
   ASSERT (name != NULL);
@@ -497,18 +509,15 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
-//  old_level = intr_disable ();
-    list_init (&t->process_child);
-    t->parent = running_thread();
-    list_init (&t->open_files);
-    t->count_file_descriptor=2;
-    t->code_exit = -100;
-    sema_init(&t->wait_for_child,0);
-    t->being_waiting_on=0;
-    t->file=NULL;
-//    t->wrap_file->file = NULL;
+  list_init (&t->process_child);
+  t->parent = running_thread();
+  list_init (&t->open_files);
+  t->count_file_descriptor = 2;
+  t->code_exit = -100;
+  sema_init(&t->wait_for_child, 0);
+  t->being_waiting_on = 0;
+  t->file = NULL;
   list_push_back (&all_list, &t->allelem);
-//  intr_set_level (old_level);
 }
 
 
@@ -625,12 +634,3 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
-
-/*
-bool cmp_waketick(struct list_elem *first, struct list_elem *second, void *aux)
-{
-    struct thread *fthread = list_entry (first, struct thread, elem);
-    struct thread *sthread = list_entry (second, struct thread, elem);
-    return fthread->waketick < sthread->waketick;
-}
-*/

@@ -603,26 +603,3 @@ install_page (void *upage, void *kpage, bool writable)
   return (pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
-
-void exit_process(int status)
-{
-  struct list_elem *e;
-  struct thread * curr = thread_current();
-  struct thread * parent = curr->parent;
-  e = list_begin(&parent->process_child);
-  while( e!= list_end(&parent->process_child))
-  {
-    struct child *c = list_entry(e, struct child, elem);
-    if(c->tid == curr->tid)
-    {
-      c->is_done = true;
-        c->code_exit = status;
-    }
-    e = list_next(e);
-  }
-  curr-> code_exit = status;
-  if(parent->being_waiting_on == curr->tid)
-      sema_up(&parent->wait_for_child);
-
-  thread_exit();
-}
