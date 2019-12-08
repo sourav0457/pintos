@@ -197,7 +197,7 @@ struct file_entry* file_list_entry(int fd)
     }
     return file_entry;
 }
-
+/*
 void exit_process(int status)
 {
     struct list_elem *e;
@@ -219,7 +219,7 @@ void exit_process(int status)
 
     thread_exit();
 }
-
+*/
 void remove_sys(struct intr_frame *p UNUSED,const char * file){
     lock_acquire(&filesys_lock);
     p->eax = filesys_remove(file)==NULL ? false : true;
