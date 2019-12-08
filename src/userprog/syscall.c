@@ -86,22 +86,7 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_OPEN:
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
-            lock_acquire(&filesys_lock);
-            struct file* file_ptr = filesys_open(arg[0]);
-            lock_release(&filesys_lock);
-            int set_value;
-            if(file_ptr == NULL){
-                set_value = -1;
-            }
-            else {
-                struct thread *curr_thread = thread_current();
-                struct file_entry *file = malloc(sizeof(struct file_entry));
-                file -> ptr = file_ptr;
-                file -> fd = curr_thread -> count_file_descriptor++;
-                list_push_back(&curr_thread->open_files, &file->elem);
-                set_value = file -> fd;
-            }
-            f -> eax = set_value;
+            open_sys(f, arg[0]);
             break;
 
         case SYS_TELL:
@@ -161,20 +146,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+5+i);
             }
             is_valid_add_multiple(&arg[1], 1);
-            if(arg[0] == 0){
-                f->eax = input_getc();
-            }
-            else{
-                struct file_entry* fptr = file_list_entry(arg[0]);
-                if(fptr == NULL){
-                    f->eax = -1;
-                }
-                else{
-                    lock_acquire(&filesys_lock);
-                    f -> eax = file_read(fptr -> ptr, arg[1], arg[2]);
-                    lock_release(&filesys_lock);
-                }
-            }
+            read_sys(f, arg[0], arg[1], arg[2]);
             break;
 
 
@@ -244,4 +216,39 @@ void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
     lock_acquire(&filesys_lock);
     p -> eax = file_write(pt -> ptr, buff, size);
     lock_release(&filesys_lock);
+}
+
+void read_sys(struct intr_frame *p, int file_desc, void *buff, int size) {
+    if(file_desc == 0){
+        p->eax = input_getc();
+    }
+    else{
+        struct file_entry* file_ptr = file_list_entry(file_desc);
+        if(file_ptr == NULL){
+            p->eax = -1;
+        }
+        else{
+            lock_acquire(&filesys_lock);
+            p -> eax = file_read(file_ptr -> ptr, buff, size);
+            lock_release(&filesys_lock);
+        }
+    }
+}
+
+void open_sys(struct intr_frame *p, int file_desc){
+    lock_acquire(&filesys_lock);
+    struct file* file_ptr = filesys_open(file_desc);
+    lock_release(&filesys_lock);
+    int set_value;
+    if(file_ptr != NULL){
+        struct thread *curr_thread = thread_current();
+        struct file_entry *file = malloc(sizeof(struct file_entry));
+        file -> ptr = file_ptr;
+        file -> fd = curr_thread -> count_file_descriptor++;
+        list_push_back(&curr_thread->open_files, &file->elem);
+        set_value = file -> fd;
+    }
+    else
+        set_value = -1;
+    p -> eax = set_value;
 }
