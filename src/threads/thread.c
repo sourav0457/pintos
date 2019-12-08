@@ -507,7 +507,6 @@ init_thread (struct thread *t, const char *name, int priority)
   t->being_waiting_on = 0;
   t->count_file_descriptor = 2;
   t->file = NULL;
-  //t->code_exit = -100;
   sema_init(&t->wait_for_child, 0);
 
   list_push_back (&all_list, &t->allelem);
