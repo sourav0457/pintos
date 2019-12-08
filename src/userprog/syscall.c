@@ -59,7 +59,9 @@ syscall_handler (struct intr_frame *f UNUSED)
             arg[0] = *((int *) f->esp+1);
             is_valid_add_multiple(&arg[0], 1);
             // is_valid_add((const void *) arg[0]);
+            lock_acquire(&filesys_lock);
             remove_sys(f,(const char*)arg[0]);
+            lock_release(&filesys_lock);
             break;
 
         case SYS_CLOSE:
@@ -114,7 +116,9 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+5+i);
             }
             is_valid_add_multiple(&arg[1], 1);
+            lock_acquire(&filesys_lock);
             write_sys(f,arg[0],arg[1],arg[2]);
+            lock_release(&filesys_lock);
             break;
 
         case SYS_SEEK:
@@ -146,7 +150,9 @@ syscall_handler (struct intr_frame *f UNUSED)
                 arg[i] = *((int *) f->esp+5+i);
             }
             is_valid_add_multiple(&arg[1], 1);
+            lock_acquire(&filesys_lock);
             read_sys(f, arg[0], arg[1], arg[2]);
+            lock_release(&filesys_lock);
             break;
 
 
@@ -171,9 +177,9 @@ struct file_entry* file_list_entry(int fd)
 }
 
 void remove_sys(struct intr_frame *p UNUSED,const char * file){
-    lock_acquire(&filesys_lock);
+    // lock_acquire(&filesys_lock);
     p->eax = filesys_remove(file)==NULL ? false : true;
-    lock_release(&filesys_lock);
+    // lock_release(&filesys_lock);
 }
 
 void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
@@ -191,9 +197,9 @@ void write_sys(struct intr_frame *p UNUSED, int descriptor, int buff, int size){
         p -> eax = -1;
         return;
     }
-    lock_acquire(&filesys_lock);
+    // lock_acquire(&filesys_lock);
     p -> eax = file_write(pt -> ptr, buff, size);
-    lock_release(&filesys_lock);
+    // lock_release(&filesys_lock);
 }
 
 void read_sys(struct intr_frame *p, int file_desc, void *buff, int size) {
@@ -206,9 +212,9 @@ void read_sys(struct intr_frame *p, int file_desc, void *buff, int size) {
             p->eax = -1;
         }
         else{
-            lock_acquire(&filesys_lock);
+            // lock_acquire(&filesys_lock);
             p -> eax = file_read(file_ptr -> ptr, buff, size);
-            lock_release(&filesys_lock);
+            // lock_release(&filesys_lock);
         }
     }
 }
