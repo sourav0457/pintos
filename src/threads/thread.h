@@ -95,15 +95,15 @@ struct thread
 
     int64_t waketick;
     bool success;
- /* my code */
+
+    struct semaphore wait_for_child;
+    struct list open_files;
     int being_waiting_on;
+    int count_file_descriptor;
+    int code_exit;
     struct list process_child;
     struct file * file;
-    struct list open_files;
-    int code_exit;
     struct thread* parent;
-    int count_file_descriptor;
-    struct semaphore wait_for_child;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -117,14 +117,14 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
-struct child {
-    bool is_done;
-    int tid;
-    struct list_elem elem;
-    int code_exit;
-};
-
 struct lock filesys_lock;
+
+struct child {
+    int code_exit;
+    int tid;
+    bool is_done;
+    struct list_elem elem; 
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

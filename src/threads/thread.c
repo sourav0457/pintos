@@ -186,9 +186,10 @@ thread_create (const char *name, int priority,
   enum intr_level old_level;
 
   struct child* c = malloc(sizeof(struct child));
-  c->tid = tid;
-  c->code_exit = t->code_exit;
   c->is_done = false;
+  c->code_exit = t->code_exit;
+  c->tid = tid;
+  
   list_push_back (&running_thread()->process_child, &c->elem);
 
   /* Prepare thread for first run by initializing its stack.
@@ -512,11 +513,12 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init (&t->process_child);
   t->parent = running_thread();
   list_init (&t->open_files);
-  t->count_file_descriptor = 2;
-  t->code_exit = -100;
-  sema_init(&t->wait_for_child, 0);
   t->being_waiting_on = 0;
+  t->count_file_descriptor = 2;
   t->file = NULL;
+  //t->code_exit = -100;
+  sema_init(&t->wait_for_child, 0);
+
   list_push_back (&all_list, &t->allelem);
 }
 

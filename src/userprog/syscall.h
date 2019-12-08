@@ -4,7 +4,8 @@
 
 void syscall_init (void);
 
-struct file_entry {
+struct file_entry
+{
     struct file* ptr;
     int fd;
     struct list_elem elem;
